@@ -8,8 +8,8 @@
 #define SHA256HMAC_SIZE 32
 
 // WiFi credentials
-const char *wifi_ssid = "******";         // Replace with your WiFi name
-const char *wifi_password = "******"; // Replace with your WiFi password
+const char *wifi_ssid = "";         // Replace with your WiFi name
+const char *wifi_password = ""; // Replace with your WiFi password
 
 // MQTT Broker settings
 const int mqtt_port = 8883;                           // MQTT port (TLS)
@@ -22,8 +22,8 @@ const long gmt_offset_sec = 0;     // GMT offset in seconds (adjust for your tim
 const int daylight_offset_sec = 0; // Daylight saving time offset in seconds
 
 const char productId[] = "ocfb9mrci6ixkm2x";
-const char deviceId[] = "26727ba6e72135d224jisq";
-const char deviceSecret[] = "YKqHIRDRSwB0eHo8";
+const char deviceId[] = "";
+const char deviceSecret[] = "";
 
 
 char clientID[50];
