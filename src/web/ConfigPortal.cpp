@@ -1,13 +1,19 @@
 #include "ConfigPortal.h"
 #include "index_html.h"
-#include <Ticker.h>
+#include "EEPROMStorage.h"
 
 ConfigPortal::ConfigPortal() : server(80) {}
 
+EEPROMStorage eepromStorage;
+
 void ConfigPortal::begin()
 {
-    startAP();
-    setupServer();
+    eepromStorage.begin();
+    if (!eepromStorage.isDataPresent())
+    {
+        startAP();
+        setupServer();
+    }
 }
 
 void ConfigPortal::handle()
@@ -31,29 +37,29 @@ void ConfigPortal::setupServer()
 {
     Serial.println("Set config Server!!");
     server.on("/", HTTP_GET, [=](AsyncWebServerRequest *request)
-    {
-        request->send_P(200, "text/html", index_html); 
-    });
+              { request->send_P(200, "text/html", index_html); });
 
     server.on("/save", HTTP_GET, [=](AsyncWebServerRequest *request)
-    {
+              {
         if (request->hasParam("ssid") && request->hasParam("password") && 
-            request->hasParam("device_id") && request->hasParam("device_secret")) 
+            request->hasParam("deviceid") && request->hasParam("devicesecret")) 
         {
             String ssid = request->getParam("ssid")->value();
             String password = request->getParam("password")->value();
-            String device_id = request->getParam("device_id")->value();
-            String device_secret = request->getParam("device_secret")->value();
+            String device_id = request->getParam("deviceid")->value();
+            String device_secret = request->getParam("devicesecret")->value();
 
             // Check device_id length (22 characters) and device_secret length (16 characters)
-            if (device_id.length() == 22 && device_secret.length() == 16) 
+            if (device_id.length() == 22 && device_secret.length() == 16)
+            {
                 request->send(200, "text/html", "<h1>Save done. Restarting the device.</h1>");
+                eepromStorage.saveCredentials(ssid, password, device_id, device_secret);
+            }
             else
                 request->send(400, "text/html", "<h1>Save failed. Device ID must be 22 characters and Device Secret must be 16 characters. Restarting the device.</h1>");
         } 
         else 
-            request->send(400, "text/html", "<h1>Save failed. Missing required fields. Restarting the device and try again.</h1>");
-    });
+            request->send(400, "text/html", "<h1>Save failed. Missing required fields. Restarting the device and try again.</h1>"); });
 
     server.begin();
 }
