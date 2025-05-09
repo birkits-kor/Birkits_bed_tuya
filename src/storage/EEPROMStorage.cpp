@@ -10,6 +10,12 @@
 #define DEVICE_SECRET_ADDR (DEVICE_ID_ADDR + DEVICE_ID_LEN)
 #define DEVICE_SECRET_LEN 16
 
+EEPROMStorage &EEPROMStorage::getInstance()
+{
+    static EEPROMStorage instance;
+    return instance;
+}
+
 void EEPROMStorage::begin()
 {
     EEPROM.begin(EEPROM_SIZE);

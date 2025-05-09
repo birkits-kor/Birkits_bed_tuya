@@ -1,15 +1,13 @@
 #include "ConfigPortal.h"
 #include "index_html.h"
-#include "EEPROMStorage.h"
+#include "../storage/EEPROMStorage.h"
 
 ConfigPortal::ConfigPortal() : server(80) {}
 
-EEPROMStorage eepromStorage;
-
 void ConfigPortal::begin()
 {
-    eepromStorage.begin();
-    if (!eepromStorage.isDataPresent())
+    EEPROMStorage::getInstance().begin();
+    if (!EEPROMStorage::getInstance().isDataPresent())
     {
         startAP();
         setupServer();
@@ -53,7 +51,7 @@ void ConfigPortal::setupServer()
             if (device_id.length() == 22 && device_secret.length() == 16)
             {
                 request->send(200, "text/html", "<h1>Save done. Restarting the device.</h1>");
-                eepromStorage.saveCredentials(ssid, password, device_id, device_secret);
+                EEPROMStorage::getInstance().saveCredentials(ssid, password, device_id, device_secret);
             }
             else
                 request->send(400, "text/html", "<h1>Save failed. Device ID must be 22 characters and Device Secret must be 16 characters. Restarting the device.</h1>");

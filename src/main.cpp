@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include "web/ConfigPortal.h"
+#include "routine/RestartRoutine.h"
 
 
 ConfigPortal configPortal;
+RestartRoutine restartRoutine(0, 100);  // GPIO 0번 핀, 연속 5번 LOW 상태를 체크
 
 void setup()
 {
@@ -14,6 +16,6 @@ void setup()
 
 void loop()
 {
-    Serial.println("@");
-    sleep(10);
+    restartRoutine.checkRoutine();
+    sleep(0.1);
 }
