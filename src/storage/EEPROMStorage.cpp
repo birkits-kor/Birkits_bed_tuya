@@ -1,6 +1,6 @@
 #include "EEPROMStorage.h"
 
-#define EEPROM_SIZE 128
+#define EEPROM_SIZE 256
 #define SSID_ADDR 0
 #define SSID_LEN 32
 #define PASSWORD_ADDR (SSID_ADDR + SSID_LEN)
