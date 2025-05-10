@@ -7,7 +7,6 @@ ConfigPortal::ConfigPortal() : server(80) {}
 void ConfigPortal::begin()
 {
     delay(1000);
-    EEPROMStorage::getInstance().begin();
     if (!EEPROMStorage::getInstance().isDataPresent())
     {
         startAP();
