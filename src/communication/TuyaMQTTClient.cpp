@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <SHA256.h>
 #include <Base64.h>
+#include "../data/MessageQueue.h"
 
 void TuyaMQTTClient::begin(WiFiClientSecure &secureClient, const char *broker, int port)
 {
@@ -118,13 +119,10 @@ int TuyaMQTTClient::calcSignature(const char *deviceId, const char *deviceSecret
 
 void TuyaMQTTClient::mqttCallback(char *topic, byte *payload, unsigned int length)
 {
-    // 데이터 큐에 저장하는 방식으로 변경 필요요
-    Serial.print("Message received on topic: ");
-    Serial.print(topic);
-    Serial.print("]: ");
-    for (int i = 0; i < length; i++)
-    {
-        Serial.print((char)payload[i]);
+    String topicStr = String(topic);
+    String message;
+    for (unsigned int i = 0; i < length; ++i) {
+        message += (char)payload[i];
     }
-    Serial.println();
+    MessageQueue::getInstance().push(topicStr, message);
 }
