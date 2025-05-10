@@ -2,7 +2,7 @@
 #define WIFI_MANAGER_H
 
 #include <WiFi.h>
-#include "../storage/EEPROMStorage.h"
+#include "../storage/NVSStorage.h"
 
 class WiFiManager {
 public:

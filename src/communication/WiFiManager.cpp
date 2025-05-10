@@ -3,13 +3,14 @@
 bool WiFiManager::connect()
 {
     delay(1000);
-    if (!EEPROMStorage::getInstance().isDataPresent())
+    auto wifi_ssid = NVSStorage::getInstance().getCredential("wifi_ssid");
+    auto wifi_password = NVSStorage::getInstance().getCredential("wifi_password");
+
+    if (wifi_ssid.isEmpty() || wifi_password.isEmpty())
         return false;
 
-    String ssid, password, deviceId, deviceSecret;
-    EEPROMStorage::getInstance().loadCredentials(ssid, password, deviceId, deviceSecret);
-    Serial.printf("WIFI ssid:%s pw:%s\n", ssid.c_str(), password.c_str());
-    WiFi.begin(ssid.c_str(), password.c_str());
+    Serial.printf("WIFI ssid:%s pw:%s\n", wifi_ssid.c_str(), wifi_password.c_str());
+    WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
     int attempts = 0;
     while (WiFi.status() != WL_CONNECTED && attempts < 20)
     {

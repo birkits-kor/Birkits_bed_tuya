@@ -3,7 +3,7 @@
 
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
-#include "../storage/EEPROMStorage.h"
+#include "../storage/NVSStorage.h"
 
 #define SHA256HMAC_SIZE 32
 
@@ -49,6 +49,8 @@ private:
     char username[100];
     char password[96];
     const char *mqtt_topic = "tylink/%s/thing/model/get";
+    String device_id;
+    String device_secret;
 };
 
 #endif // TUYA_MQTT_CLIENT_H

@@ -1,5 +1,5 @@
 #include "RestartRoutine.h"
-#include "../storage/EEPROMStorage.h"
+#include "../storage/NVSStorage.h"
 
 RestartRoutine::RestartRoutine(uint8_t pin, unsigned long thresholdMillis)
     : _pin(pin), _thresholdMillis(thresholdMillis), _lowStartTime(0), _wasLow(false)
@@ -23,7 +23,7 @@ void RestartRoutine::checkRoutine()
             if (millis() - _lowStartTime >= _thresholdMillis)
             {
                 Serial.println("EEPROM data will be erased. Performing factory reset...");
-                EEPROMStorage::getInstance().reset(); // Erase EEPROM
+                NVSStorage::getInstance().reset(); // Erase EEPROM
                 delay(100);             // Ensure EEPROM is flushed
                 ESP.restart();          // Restart device
                 _wasLow = false;        // Reset flag (will not matter due to restart)

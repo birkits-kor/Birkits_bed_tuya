@@ -21,6 +21,8 @@ private:
 
     static const int EEPROM_SIZE = 512;
     static const int FLAG_ADDR = 0; // 설정 완료 여부 저장 위치
+    String wifi_ssid = "";
+    String wifi_password = "";
 };
 
 #endif

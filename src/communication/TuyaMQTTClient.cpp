@@ -10,25 +10,26 @@ void TuyaMQTTClient::begin(WiFiClientSecure &secureClient, const char *broker, i
     mqttClient.setClient(secureClient);
     mqttClient.setServer(broker, port);
     mqttClient.setCallback(mqttCallback);
+    device_id = NVSStorage::getInstance().getCredential("device_id");
+    device_secret = NVSStorage::getInstance().getCredential("device_secret");
 }
 
 bool TuyaMQTTClient::connect()
 {
     if (mqttClient.connected())
         return true;
-    if (!EEPROMStorage::getInstance().isDataPresent())
+
+    if (device_id.isEmpty() || device_secret.isEmpty())
         return false;
 
-    String a, b, deviceId, deviceSecret;
-    EEPROMStorage::getInstance().loadCredentials(a, b, deviceId, deviceSecret);
-    Serial.printf("TuyaMQTTClient id:%s pw:%s\n", deviceId.c_str(), deviceSecret.c_str());
+    Serial.printf("TuyaMQTTClient id:%s pw:%s\n", device_id.c_str(), device_secret.c_str());
     client->setCACert(ca_cert);
     const int maxAttempts = 10;
     for (int attempt = 1; attempt <= maxAttempts; ++attempt)
     {
         if (!mqttClient.connected())
         {
-            calcSignature(deviceId.c_str(), deviceSecret.c_str());
+            calcSignature(device_id.c_str(), device_secret.c_str());
             Serial.printf("Attempt %d: Connecting to MQTT Broker as %s...\n", attempt, clientID);
 
             if (mqttClient.connect(clientID, username, password))
@@ -36,10 +37,10 @@ bool TuyaMQTTClient::connect()
                 Serial.println("Connected to MQTT broker");
 
                 char auto_subscribe_topic[64];
-                sprintf(auto_subscribe_topic, "tylink/%s/channel/downlink/auto_subscribe", deviceId.c_str());
+                sprintf(auto_subscribe_topic, "tylink/%s/channel/downlink/auto_subscribe", device_id.c_str());
                 mqttClient.subscribe(auto_subscribe_topic);
 
-                sprintf(auto_subscribe_topic, mqtt_topic, deviceId.c_str());
+                sprintf(auto_subscribe_topic, mqtt_topic, device_id.c_str());
                 mqttClient.publish(auto_subscribe_topic, "{\"data\":{\"format\":\"simple\"}}");
                 delay(100);
                 return true; // 연결 성공

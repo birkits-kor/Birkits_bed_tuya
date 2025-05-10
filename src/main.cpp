@@ -5,6 +5,7 @@
 #include "communication/TimeManager.h"
 #include "communication/TuyaMQTTClient.h"
 #include "routine/RestartRoutine.h"
+#include "storage/NVSStorage.h"
 
 ConfigPortal configPortal;
 WiFiManager wifiManager;
@@ -16,11 +17,9 @@ RestartRoutine restartRoutine(0, 5000);
 void setup()
 {
     Serial.begin(115200);
-    EEPROMStorage::getInstance().begin(); // 초기화 필수
+    NVSStorage::getInstance().begin(); // 초기화 필수
     Serial.println("Birkits Bed start!!");
     configPortal.begin();
-
-
 
     bool wifiManager_result = false;
     bool timeManager_result = false;
