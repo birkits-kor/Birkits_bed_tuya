@@ -1,11 +1,13 @@
 #include <Arduino.h>
 #include "communication/ConfigPortal.h"
 #include "communication/WiFiManager.h"
+#include "communication/TimeManager.h"
 #include "routine/RestartRoutine.h"
 
 
 ConfigPortal configPortal;
 WiFiManager wifiManager;
+TimeManager timeManager;
 RestartRoutine restartRoutine(0, 100);  // GPIO 0번 핀, 연속 5번 LOW 상태를 체크
 
 void setup()
@@ -21,6 +23,7 @@ void setup()
         while (1)
             delay(1000);        
     }
+    timeManager.sync();
 }
 
 void loop()
