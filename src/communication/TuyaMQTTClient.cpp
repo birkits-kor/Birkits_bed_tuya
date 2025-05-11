@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <SHA256.h>
 #include <Base64.h>
+#include <ArduinoJson.h>
 #include "../data/MessageQueue.h"
 
 void TuyaMQTTClient::begin(WiFiClientSecure &secureClient, const char *broker, int port)
@@ -120,10 +121,18 @@ int TuyaMQTTClient::calcSignature(const char *deviceId, const char *deviceSecret
 
 void TuyaMQTTClient::mqttCallback(char *topic, byte *payload, unsigned int length)
 {
-    String topicStr = String(topic);
     String message;
-    for (unsigned int i = 0; i < length; ++i) {
+    for (unsigned int i = 0; i < length; ++i)
+    {
         message += (char)payload[i];
     }
+    StaticJsonDocument<4096> doc;
+    DeserializationError error = deserializeJson(doc, payload, length);
+    JsonObject data = doc["data"];
+    String topicStr;
+    if (!error && doc["data"].containsKey("topic"))
+        topicStr = doc["data"]["topic"].as<String>();
+    else
+        topicStr = "";
     MessageQueue::getInstance().push(topicStr, message);
 }
