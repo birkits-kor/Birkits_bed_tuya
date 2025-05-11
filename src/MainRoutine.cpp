@@ -25,7 +25,7 @@ void MainRoutine::init()
     }
 
     Serial.printf("setup done wifiManager[%d] timeManager[%d] tuyaMQTTClient[%d]\n", wifiManager_result, timeManager_result, tuyaMQTTClient_result);
-    motorRoutine.moveForward("backrest");
+    motorRoutine.begin();
 }
 
 void MainRoutine::do1msTasks()
@@ -46,7 +46,7 @@ void MainRoutine::do10msTasks()
     {
         prev10ms = now;
         // 10ms마다 실행할 작업
-        Serial.println(motorRoutine.getSensorValue("backrest"));
+        // Serial.println(motorRoutine.getSensorValue("backrest"));
     }
 }
 

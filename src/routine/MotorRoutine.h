@@ -3,18 +3,16 @@
 
 #include <Arduino.h>
 #include <map>
-#include "../motor/MotorController.h"
+#include "../motor/BackrestMotorController.h"
 
 // 모터 핀 정의
-#define BACKREST_MOTOR_PIN1 18
-#define BACKREST_MOTOR_PIN2 19
 #define LEGS_MOTOR_PIN1 22
 #define LEGS_MOTOR_PIN2 23
 #define TABLE_MOTOR_PIN1 12
 #define TABLE_MOTOR_PIN2 13
 
 // 홀 센서 핀 정의
-#define BACKREST_HALL_SENSOR_PIN 25
+
 #define LEGS_HALL_SENSOR_PIN 26
 #define TABLE_HALL_SENSOR_PIN 27
 
@@ -31,7 +29,7 @@ public:
     void begin();
 
 private:
-    std::map<String, MotorController *> motors;
+
 };
 
 #endif

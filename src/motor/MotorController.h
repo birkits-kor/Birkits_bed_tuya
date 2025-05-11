@@ -2,48 +2,32 @@
 #define MOTOR_CONTROLLER_H
 
 #include <Arduino.h>
+#include "../storage/NVSStorage.h"
+
+enum MotorState
+{
+    MOTOR_STOPPED,
+    MOTOR_MOVING_FORWARD,
+    MOTOR_MOVING_BACKWARD
+};
 
 class MotorController
 {
 public:
-    MotorController(int pin1, int pin2, int hallPin)
-        : _pin1(pin1), _pin2(pin2), _hallPin(hallPin) {}
+    virtual ~MotorController() {}
 
-    void begin()
-    {
-        pinMode(_pin1, OUTPUT);
-        pinMode(_pin2, OUTPUT);
-        pinMode(_hallPin, INPUT);
-        stopMotor(); // 초기 상태는 정지
-    }
+    // 상태 관련 함수들
+    void begin();
 
-    void moveForward()
-    {
-        digitalWrite(_pin1, LOW);
-        digitalWrite(_pin2, HIGH);        
-    }
+protected:
+    int _pin1, _pin2, _hallPin;
 
-    void moveBackward()
-    {
-        digitalWrite(_pin1, HIGH);
-        digitalWrite(_pin2, LOW);
-    }
-
-    void stopMotor()
-    {
-        digitalWrite(_pin1, LOW);
-        digitalWrite(_pin2, LOW);
-    }
-
-    int getSensorValue()
-    {
-        return digitalRead(_hallPin);
-    }
+    // 생성자는 protected로 설정하여 직접 인스턴스를 만들지 못하도록 함
+    MotorController(int pin1, int pin2, int hallPin);
 
 private:
-    int _pin1;
-    int _pin2;
-    int _hallPin;
+    void loadPosition();
+    void savePosition();
 };
 
 #endif

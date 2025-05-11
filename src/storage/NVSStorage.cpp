@@ -22,24 +22,54 @@ void NVSStorage::begin()
 
 void NVSStorage::saveCredential(const String &key, const String &value)
 {
-    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvsHandle); // 수정: NVS_WRITE -> NVS_READWRITE
-    if (err == ESP_OK)
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvsHandle);
+    if (err != ESP_OK)
     {
-        err = nvs_set_str(nvsHandle, key.c_str(), value.c_str());
-        if (err == ESP_OK)
+        Serial.printf("Failed to open NVS for writing: %s\n", esp_err_to_name(err));
+        return;
+    }
+
+    // 기존 값 확인
+    size_t required_size = 0;
+    err = nvs_get_str(nvsHandle, key.c_str(), NULL, &required_size);
+    if (err == ESP_OK && required_size > 0)
+    {
+        char *existing_value = new char[required_size];
+        nvs_get_str(nvsHandle, key.c_str(), existing_value, &required_size);
+
+        if (value == String(existing_value))
         {
-            nvs_commit(nvsHandle);
+            // 값이 같으면 저장 생략
+            Serial.println("Value unchanged, skipping NVS write");
+            delete[] existing_value;
+            nvs_close(nvsHandle);
+            return;
         }
-        else
-        {
-            Serial.println("Failed to save data to NVS");
-        }
+
+        delete[] existing_value;
+    }
+
+    // 저장
+    err = nvs_set_str(nvsHandle, key.c_str(), value.c_str());
+    if (err != ESP_OK)
+    {
+        Serial.printf("Failed to save data to NVS: %s\n", esp_err_to_name(err));
         nvs_close(nvsHandle);
+        return;
+    }
+
+    // 커밋
+    err = nvs_commit(nvsHandle);
+    if (err != ESP_OK)
+    {
+        Serial.printf("NVS commit failed: %s\n", esp_err_to_name(err));
     }
     else
     {
-        Serial.println("Failed to open NVS for writing");
+        Serial.println("Credential saved successfully");
     }
+
+    nvs_close(nvsHandle);
 }
 
 String NVSStorage::getCredential(const String &key)
