@@ -2,6 +2,7 @@
 #include "MainRoutine.h"
 
 MainRoutine mainRoutine;
+void keyboardTest(char c);
 
 void setup()
 {
@@ -15,19 +16,24 @@ void loop()
     mainRoutine.do100msTasks();
 
     if (Serial.available() > 0)
-    {
-        auto receivedChar = Serial.read(); // 한 글자 읽기
-        if (receivedChar == 'q')
-        {
-            BackrestMotorController::getInstance()->moveUp(50);
-        }
-        if (receivedChar == 'a')
-        {
-            BackrestMotorController::getInstance()->moveDown(50);
-        }
-    }
+        keyboardTest(Serial.read());
 }
 
+void keyboardTest(char c)
+{
+    if (c == 'q')
+        BackrestMotorController::getInstance()->moveUp(50);
+    if (c == 'a')
+        BackrestMotorController::getInstance()->moveDown(50);
+    if (c == 'w')
+        LegrestMotorController::getInstance()->moveUp(50);
+    if (c == 's')
+        LegrestMotorController::getInstance()->moveDown(50);
+    if (c == 'e')
+        TableMotorController::getInstance()->moveUp(50);
+    if (c == 'd')
+        TableMotorController::getInstance()->moveDown(50);
+}
 
 // #define BACKREST_MOTOR_PIN1 18
 // #define BACKREST_MOTOR_PIN2 19

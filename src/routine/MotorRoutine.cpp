@@ -40,9 +40,13 @@ MotorRoutine::MotorRoutine()
 void MotorRoutine::begin()
 {
     BackrestMotorController::getInstance()->setupMotor();
+    LegrestMotorController::getInstance()->setupMotor();
+    TableMotorController::getInstance()->setupMotor();
 }
 
 void MotorRoutine::updatePos()
 {
     BackrestMotorController::getInstance()->updatePos();
+    LegrestMotorController::getInstance()->updatePos();
+    TableMotorController::getInstance()->updatePos();
 }

@@ -4,17 +4,8 @@
 #include <Arduino.h>
 #include <map>
 #include "../motor/BackrestMotorController.h"
-
-// 모터 핀 정의
-#define LEGS_MOTOR_PIN1 22
-#define LEGS_MOTOR_PIN2 23
-#define TABLE_MOTOR_PIN1 12
-#define TABLE_MOTOR_PIN2 13
-
-// 홀 센서 핀 정의
-
-#define LEGS_HALL_SENSOR_PIN 26
-#define TABLE_HALL_SENSOR_PIN 27
+#include "../motor/LegrestMotorController.h"
+#include "../motor/TableMotorController.h"
 
 class MotorRoutine
 {

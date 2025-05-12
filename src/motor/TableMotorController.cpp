@@ -1,42 +1,42 @@
-#include "BackrestMotorController.h"
+#include "TableMotorController.h"
 
-BackrestMotorController *BackrestMotorController::instance = nullptr;
-volatile bool BackrestMotorController::_ischange = false;
-volatile int BackrestMotorController::_pulseCount = 0;
-bool BackrestMotorController::_enabled = false;
-MotorState BackrestMotorController::_state = MOTOR_STOPPED;
-volatile uint16_t BackrestMotorController::_position = 0;
-uint16_t BackrestMotorController::_targetPosition = UINT16_MAX;
-String BackrestMotorController::_name = "back_pos";
+TableMotorController *TableMotorController::instance = nullptr;
+volatile bool TableMotorController::_ischange = false;
+volatile int TableMotorController::_pulseCount = 0;
+bool TableMotorController::_enabled = false;
+MotorState TableMotorController::_state = MOTOR_STOPPED;
+volatile uint16_t TableMotorController::_position = 0;
+uint16_t TableMotorController::_targetPosition = UINT16_MAX;
+String TableMotorController::_name = "table_pos";
 
-BackrestMotorController *BackrestMotorController::getInstance()
+TableMotorController *TableMotorController::getInstance()
 {
     if (instance == nullptr)
-        instance = new BackrestMotorController();
+        instance = new TableMotorController();
     return instance;
 }
 
-void BackrestMotorController::backrestISR()
+void TableMotorController::tableISR()
 {
     if (!_enabled)
         _pulseCount++;
 
-    if (_state == MOTOR_MOVING_FORWARD && _position < BACKREST_MAX)
+    if (_state == MOTOR_MOVING_FORWARD && _position < TABLE_MAX)
         _position++; // 전진 중일 때 포지션 증가
     else if (_state == MOTOR_MOVING_BACKWARD && _position > 0)
         _position--; // 후진 중일 때 포지션 감소
 
-    if (_enabled && (_position == 0 || _position == BACKREST_MAX || _position == _targetPosition))
+    if (_enabled && (_position == 0 || _position == TABLE_MAX || _position == _targetPosition))
     {
         _ischange = true;
     }
 }
 
-void BackrestMotorController::setupMotor()
+void TableMotorController::setupMotor()
 {
     begin();
     _enabled = false;
-    attachInterrupt(digitalPinToInterrupt(_hallPin), backrestISR, RISING);
+    attachInterrupt(digitalPinToInterrupt(_hallPin), tableISR, RISING);
     String val = NVSStorage::getInstance().getCredential(_name);
 
     if (val.length() == 0)
@@ -58,14 +58,14 @@ void BackrestMotorController::setupMotor()
     if (_pulseCount != 0)
     {
         _enabled = true;
-        Serial.printf("BackrestMotor enable pos[%d]!!\n", _position);
+        Serial.printf("TableMotor enable pos[%d]!!\n", _position);
         return;
     }
     else
-        Serial.printf("BackrestMotor disable!!\n");
+        Serial.printf("TableMotor disable!!\n");
 }
 
-void BackrestMotorController::moveTo(uint16_t targetPosition)
+void TableMotorController::moveTo(uint16_t targetPosition)
 {
     if (!_enabled)
         return;
@@ -84,18 +84,18 @@ void BackrestMotorController::moveTo(uint16_t targetPosition)
         stopMotor();
 }
 
-void BackrestMotorController::updatePos()
+void TableMotorController::updatePos()
 {
     if (!_enabled)
         return;
-    
+
     if (_ischange)
     {
         _ischange = false;
-        Serial.printf("BackrestMotor move done!!\n");
-        if (_position == 0 || _position == BACKREST_MAX)
+        Serial.printf("TableMotor move done!!\n");
+        if (_position == 0 || _position == TABLE_MAX)
             delay(1000);
-        BackrestMotorController::getInstance()->stopMotor();
+        TableMotorController::getInstance()->stopMotor();
         NVSStorage::getInstance().saveCredential(_name, String((_position / 10) * 10));
     }
 
@@ -103,31 +103,31 @@ void BackrestMotorController::updatePos()
     if (_state != MOTOR_STOPPED && millis() > _startTime + 30 * 1000)
     {
         _ischange = true;
-        if(_state == MOTOR_MOVING_FORWARD)          
-            _position = BACKREST_MAX;
-        else if(_state == MOTOR_MOVING_BACKWARD)
+        if (_state == MOTOR_MOVING_FORWARD)
+            _position = TABLE_MAX;
+        else if (_state == MOTOR_MOVING_BACKWARD)
             _position = 0;
     }
 }
 
-int BackrestMotorController::getPosition()
+int TableMotorController::getPosition()
 {
-    return map(0, 80, 0, BACKREST_MAX, _position);
+    return map(0, 80, 0, TABLE_MAX, _position);
 }
 
-void BackrestMotorController::moveUp(uint16_t n)
+void TableMotorController::moveUp(uint16_t n)
 {
     if (!_enabled)
         return;
-    if (_position + n >= BACKREST_MAX)
-        _targetPosition = BACKREST_MAX;
+    if (_position + n >= TABLE_MAX)
+        _targetPosition = TABLE_MAX;
     else
         _targetPosition = _position + n;
-    _startTime = millis() - (20 * 1000); // 최대 10초 이동동
+    _startTime = millis() - (20 * 1000);
     moveForward();
 }
 
-void BackrestMotorController::moveDown(uint16_t n)
+void TableMotorController::moveDown(uint16_t n)
 {
     if (!_enabled)
         return;
@@ -135,25 +135,25 @@ void BackrestMotorController::moveDown(uint16_t n)
         _targetPosition = 0;
     else
         _targetPosition = _position - n;
-    _startTime = millis() - (20 * 1000); // 최대 10초 이동동
+    _startTime = millis() - (20 * 1000);
     moveBackward();
 }
 
-void BackrestMotorController::moveForward()
+void TableMotorController::moveForward()
 {
     digitalWrite(_pin1, LOW);
     digitalWrite(_pin2, HIGH);
     _state = MOTOR_MOVING_FORWARD;
 }
 
-void BackrestMotorController::moveBackward()
+void TableMotorController::moveBackward()
 {
     digitalWrite(_pin1, HIGH);
     digitalWrite(_pin2, LOW);
     _state = MOTOR_MOVING_BACKWARD;
 }
 
-void BackrestMotorController::stopMotor()
+void TableMotorController::stopMotor()
 {
     digitalWrite(_pin1, LOW);
     digitalWrite(_pin2, LOW);
