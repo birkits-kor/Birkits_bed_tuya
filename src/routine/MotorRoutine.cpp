@@ -41,3 +41,8 @@ void MotorRoutine::begin()
 {
     BackrestMotorController::getInstance()->setupMotor();
 }
+
+void MotorRoutine::updatePos()
+{
+    BackrestMotorController::getInstance()->updatePos();
+}

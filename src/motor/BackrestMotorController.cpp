@@ -1,6 +1,7 @@
 #include "BackrestMotorController.h"
 
 BackrestMotorController *BackrestMotorController::instance = nullptr;
+volatile bool BackrestMotorController::_ischange = false;
 volatile int BackrestMotorController::_pulseCount = 0;
 bool BackrestMotorController::_enabled = false;
 MotorState BackrestMotorController::_state = MOTOR_STOPPED;
@@ -24,11 +25,10 @@ void BackrestMotorController::backrestISR()
         _position++; // 전진 중일 때 포지션 증가
     else if (_state == MOTOR_MOVING_BACKWARD && _position > 0)
         _position--; // 후진 중일 때 포지션 감소
+
     if (_enabled && (_position == 0 || _position == BACKREST_MAX || _position == _targetPosition))
     {
-        delay(1000);
-        BackrestMotorController::getInstance()->stopMotor();
-        NVSStorage::getInstance().saveCredential(_name, String(_position));
+        _ischange = true;
     }
 }
 
@@ -47,32 +47,67 @@ void BackrestMotorController::setupMotor()
 
     _pulseCount = 0;
     moveForward();
-    delay(1000); // 0.1초 전진
+    delay(100); // 0.1초 전진
     stopMotor();
-    delay(100);
+    delay(10);
 
     moveBackward();
-    delay(1000); // 0.1초 후진
+    delay(100); // 0.1초 후진
     stopMotor();
 
     if (_pulseCount != 0)
     {
         _enabled = true;
-        Serial.printf("BackrestMotor enable pos[%d]!!", _position);
+        Serial.printf("BackrestMotor enable pos[%d]!!\n", _position);
+        return;
     }
+    else
+        Serial.printf("BackrestMotor disable!!\n");
 }
 
 void BackrestMotorController::moveTo(uint16_t targetPosition)
 {
-    _targetPosition = targetPosition;
     if (!_enabled)
         return;
+    _targetPosition = targetPosition;
     if (_position < _targetPosition)
+    {
+        _startTime = millis();
         moveForward();
+    }
     else if (_position > _targetPosition)
+    {
+        _startTime = millis();
         moveBackward();
+    }
     else
         stopMotor();
+}
+
+void BackrestMotorController::updatePos()
+{
+    if (!_enabled)
+        return;
+    
+    if (_ischange)
+    {
+        _ischange = false;
+        Serial.printf("BackrestMotor move done!!\n");
+        if (_position == 0 || _position == BACKREST_MAX)
+            delay(1000);
+        BackrestMotorController::getInstance()->stopMotor();
+        NVSStorage::getInstance().saveCredential(_name, String((_position / 10) * 10));
+    }
+
+    // 끝점 값 추가 보정
+    if (_state != MOTOR_STOPPED && millis() > _startTime + 30 * 1000)
+    {
+        _ischange = true;
+        if(_state == MOTOR_MOVING_FORWARD)          
+            _position = BACKREST_MAX;
+        else if(_state == MOTOR_MOVING_BACKWARD)
+            _position = 0;
+    }
 }
 
 int BackrestMotorController::getPosition()

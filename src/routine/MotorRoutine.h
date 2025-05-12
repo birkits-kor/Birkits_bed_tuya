@@ -20,13 +20,17 @@ class MotorRoutine
 {
 public:
     MotorRoutine();
+    void begin();
+    void updatePos();
+
+
     void addMotor(const String &motorName, MotorController *motor);
     void moveForward(const String &motorName);
     void moveBackward(const String &motorName);
     void stopMotor(const String &motorName);
     int getSensorValue(const String &motorName);
     void stopAllMotors();
-    void begin();
+    
 
 private:
 

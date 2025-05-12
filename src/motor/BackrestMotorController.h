@@ -16,6 +16,7 @@ public:
 
     void setupMotor();
     void moveTo(uint16_t targetPosition);
+    void updatePos();
     int getPosition();
 
 private:
@@ -29,12 +30,15 @@ private:
     void moveBackward();
     void stopMotor();
 
+    static volatile bool _ischange;
     static bool _enabled;
     static volatile int _pulseCount;
     static MotorState _state;
     static volatile uint16_t _position;
     static uint16_t _targetPosition;
     static String _name;
+
+    unsigned long _startTime = 0;
 };
 
 #endif

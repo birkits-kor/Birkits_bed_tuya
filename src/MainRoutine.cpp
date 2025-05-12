@@ -59,5 +59,6 @@ void MainRoutine::do100msTasks()
         // 100ms마다 실행할 작업
         restartRoutine.checkRoutine();
         tuyaMQTTClient.connect();
+        motorRoutine.updatePos();
     }
 }
