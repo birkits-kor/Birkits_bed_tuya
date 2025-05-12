@@ -18,6 +18,8 @@ public:
     void moveTo(uint16_t targetPosition);
     void updatePos();
     int getPosition();
+    void moveUp(uint16_t n);
+    void moveDown(uint16_t n);
 
 private:
     BackrestMotorController()
@@ -25,7 +27,6 @@ private:
 
     static BackrestMotorController *instance;
     static void backrestISR();
-    MotorState getState();
     void moveForward();
     void moveBackward();
     void stopMotor();

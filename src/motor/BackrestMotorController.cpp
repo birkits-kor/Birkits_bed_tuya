@@ -112,12 +112,27 @@ void BackrestMotorController::updatePos()
 
 int BackrestMotorController::getPosition()
 {
-    return _position;
+    return map(0, 80, 0, BACKREST_MAX, _position);
 }
 
-MotorState BackrestMotorController::getState()
+void BackrestMotorController::moveUp(uint16_t n)
 {
-    return _state;
+    if (_position + n >= BACKREST_MAX)
+        _targetPosition = BACKREST_MAX;
+    else
+        _targetPosition = _position + n;
+    _startTime = millis() - (20 * 1000); // 최대 10초 이동동
+    moveForward();
+}
+
+void BackrestMotorController::moveDown(uint16_t n)
+{
+    if (_position <= n)
+        _targetPosition = 0;
+    else
+        _targetPosition = _position - n;
+    _startTime = millis() - (20 * 1000); // 최대 10초 이동동
+    moveBackward();
 }
 
 void BackrestMotorController::moveForward()

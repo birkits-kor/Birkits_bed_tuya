@@ -27,9 +27,9 @@ MotorRoutine::MotorRoutine()
 //     }
 // }
 
-int MotorRoutine::getSensorValue(const String &motorName) {
-    return BackrestMotorController::getInstance()->getPosition();
-}
+// int MotorRoutine::getSensorValue(const String &motorName) {
+//     return BackrestMotorController::getInstance()->getPosition();
+// }
 
 // void MotorRoutine::stopAllMotors() {
 //     for (auto &motorPair : motors) {
