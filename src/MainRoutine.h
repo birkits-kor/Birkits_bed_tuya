@@ -5,7 +5,6 @@
 #include "config.h"
 #include "communication/ConfigPortal.h"
 #include "communication/WiFiManager.h"
-#include "communication/TimeManager.h"
 #include "communication/TuyaMQTTClient.h"
 #include "routine/RestartRoutine.h"
 #include "routine/MotorRoutine.h"
@@ -22,7 +21,6 @@ public:
 private:
     ConfigPortal configPortal;
     WiFiManager wifiManager;
-    TimeManager timeManager;
     TuyaMQTTClient tuyaMQTTClient;
     WiFiClientSecure espClient;
     RestartRoutine restartRoutine = RestartRoutine(0, 5000);

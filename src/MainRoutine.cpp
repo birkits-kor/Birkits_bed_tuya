@@ -1,4 +1,5 @@
 #include "MainRoutine.h"
+#include "communication/TimeManager.h"
 
 void MainRoutine::init()
 {
@@ -15,7 +16,7 @@ void MainRoutine::init()
     {
         wifiManager_result = true;
         Serial.println("WIFI connected!!");
-        timeManager_result = timeManager.sync();
+        timeManager_result = TimeManager::getInstance().sync();
         tuyaMQTTClient.begin(espClient, mqtt_broker, mqtt_port);
         tuyaMQTTClient_result = tuyaMQTTClient.connect();
     }
