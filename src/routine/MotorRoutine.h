@@ -6,6 +6,7 @@
 #include "../motor/BackrestMotorController.h"
 #include "../motor/LegrestMotorController.h"
 #include "../motor/TableMotorController.h"
+#include "../motor/SpeakerController.h"
 
 class MotorRoutine
 {

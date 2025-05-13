@@ -42,6 +42,7 @@ void MotorRoutine::begin()
     BackrestMotorController::getInstance()->setupMotor();
     LegrestMotorController::getInstance()->setupMotor();
     TableMotorController::getInstance()->setupMotor();
+    SpeakerController::getInstance();
 }
 
 void MotorRoutine::updatePos()

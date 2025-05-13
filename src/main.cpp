@@ -33,6 +33,11 @@ void keyboardTest(char c)
         TableMotorController::getInstance()->moveUp(50);
     if (c == 'd')
         TableMotorController::getInstance()->moveDown(50);
+    if (c == 'z')
+        SpeakerController::getInstance()->on();
+    if (c == 'x')
+        SpeakerController::getInstance()->off();
+     
 }
 
 // #define BACKREST_MOTOR_PIN1 18
