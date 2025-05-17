@@ -46,8 +46,7 @@ void MainRoutine::do10msTasks()
     if (now - prev10ms >= 10)
     {
         prev10ms = now;
-        // 10ms마다 실행할 작업
-        // Serial.println(motorRoutine.getSensorValue("backrest"));
+        motorRoutine.loopByIr();
     }
 }
 

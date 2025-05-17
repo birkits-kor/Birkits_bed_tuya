@@ -20,6 +20,7 @@ public:
     int getPosition();
     void moveUp(uint16_t n);
     void moveDown(uint16_t n);
+    void stopMotor();
 
 private:
     TableMotorController()
@@ -29,7 +30,7 @@ private:
     static void tableISR();
     void moveForward();
     void moveBackward();
-    void stopMotor();
+
 
     static volatile bool _ischange;
     static bool _enabled;

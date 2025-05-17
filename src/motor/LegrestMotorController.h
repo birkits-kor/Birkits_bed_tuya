@@ -20,6 +20,7 @@ public:
     int getPosition();
     void moveUp(uint16_t n);
     void moveDown(uint16_t n);
+    void stopMotor();
 
 private:
     LegrestMotorController()
@@ -29,7 +30,6 @@ private:
     static void legrestISR();
     void moveForward();
     void moveBackward();
-    void stopMotor();
 
     static volatile bool _ischange;
     static bool _enabled;
