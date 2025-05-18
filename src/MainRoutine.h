@@ -9,6 +9,7 @@
 #include "routine/RestartRoutine.h"
 #include "routine/MotorRoutine.h"
 #include "storage/NVSStorage.h"
+#include "communication/IRDecoder.h"
 
 class MainRoutine
 {
@@ -25,6 +26,7 @@ private:
     WiFiClientSecure espClient;
     RestartRoutine restartRoutine = RestartRoutine(0, 5000);
     MotorRoutine motorRoutine;
+    IRDecoder irDecoder;
 
     const int mqtt_port = 8883;                // MQTT port (TLS)
     const char *mqtt_broker = "m1.tuyaus.com"; // EMQX broker endpoint

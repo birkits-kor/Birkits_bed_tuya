@@ -27,6 +27,7 @@ void MainRoutine::init()
 
     Serial.printf("setup done wifiManager[%d] timeManager[%d] tuyaMQTTClient[%d]\n", wifiManager_result, timeManager_result, tuyaMQTTClient_result);
     motorRoutine.begin();
+    irDecoder.setup();
 }
 
 void MainRoutine::do1msTasks()
@@ -35,7 +36,6 @@ void MainRoutine::do1msTasks()
     if (now - prev1ms >= 1)
     {
         prev1ms = now;
-        // 1ms마다 실행할 작업
         tuyaMQTTClient.loop();
     }
 }
@@ -46,7 +46,7 @@ void MainRoutine::do10msTasks()
     if (now - prev10ms >= 10)
     {
         prev10ms = now;
-        motorRoutine.loopByIr();
+        motorRoutine.loopByIr(irDecoder.getCommand());
     }
 }
 
@@ -56,7 +56,6 @@ void MainRoutine::do100msTasks()
     if (now - prev100ms >= 100)
     {
         prev100ms = now;
-        // 100ms마다 실행할 작업
         restartRoutine.checkRoutine();
         tuyaMQTTClient.connect();
         motorRoutine.updatePos();

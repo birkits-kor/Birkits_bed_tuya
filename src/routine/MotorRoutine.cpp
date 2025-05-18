@@ -10,7 +10,6 @@ void MotorRoutine::begin()
     LegrestMotorController::getInstance()->setupMotor();
     TableMotorController::getInstance()->setupMotor();
     SpeakerController::getInstance();
-    irDecoder.setup();
     LedController::getInstance()->stop();
 }
 
@@ -21,7 +20,7 @@ void MotorRoutine::updatePos()
     TableMotorController::getInstance()->updatePos();
 }
 
-void MotorRoutine::loopByIr()
+void MotorRoutine::loopByIr(IRCommand cmd)
 {
     if (state != MotorWaitState::NONE)
     {
@@ -36,9 +35,10 @@ void MotorRoutine::loopByIr()
         }
     }
 
-    IRCommand cmd = irDecoder.getCommand();
     switch (cmd)
     {
+    case IRCommand::NONE:
+        break;
     case IRCommand::STOP:
         preCmd = cmd;
         BackrestMotorController::getInstance()->stopMotor();
@@ -160,27 +160,27 @@ void MotorRoutine::loopByIr()
         }
 
     case IRCommand::POSE1:
-        // TODO: add handling
+        mode = 1;
         break;
 
     case IRCommand::POSE2:
-        // TODO: add handling
+        mode = 2;
         break;
 
     case IRCommand::POSE3:
-        // TODO: add handling
+        mode = 3;
         break;
 
     case IRCommand::POSE4:
-        // TODO: add handling
+        mode = 4;
         break;
 
     case IRCommand::POSE5:
-        // TODO: add handling
+        mode = 5;
         break;
 
     case IRCommand::POSE6:
-        // TODO: add handling
+        mode = 6;
         break;
 
     case IRCommand::SPEAKER:
@@ -194,7 +194,7 @@ void MotorRoutine::loopByIr()
         if (!ledState)
         {
             LedController::getInstance()->run();
-            ledState =true;
+            ledState = true;
         }
         else
         {
@@ -202,9 +202,13 @@ void MotorRoutine::loopByIr()
             ledState = false;
         }
         break;
-
-    case IRCommand::NONE:
     default:
         break;
     }
+
+    //원점 설정 여부에 따라 로직 구현 다름름
+    if(mode && modeFlag)
+    {
+    }
+
 }
