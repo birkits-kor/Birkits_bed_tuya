@@ -1,10 +1,8 @@
 #include "MotorRoutine.h"
 
-
 MotorRoutine::MotorRoutine()
 {
 }
-
 
 void MotorRoutine::begin()
 {
@@ -13,6 +11,7 @@ void MotorRoutine::begin()
     TableMotorController::getInstance()->setupMotor();
     SpeakerController::getInstance();
     irDecoder.setup();
+    LedController::getInstance()->stop();
 }
 
 void MotorRoutine::updatePos()
@@ -24,19 +23,18 @@ void MotorRoutine::updatePos()
 
 void MotorRoutine::loopByIr()
 {
-    if(state != MotorWaitState::NONE)
+    if (state != MotorWaitState::NONE)
     {
-        switch(state)
+        switch (state)
         {
-            case MotorWaitState::WAIT_TABLE_ORIGIN_FOR_LEG_UP:
-            if(TableMotorController::getInstance()->getPosition() < 30)
+        case MotorWaitState::WAIT_TABLE_ORIGIN_FOR_LEG_UP:
+            if (TableMotorController::getInstance()->getPosition() < 30)
             {
                 TableMotorController::getInstance()->moveTo(TABLE_MAX);
             }
             break;
         }
     }
-
 
     IRCommand cmd = irDecoder.getCommand();
     switch (cmd)
@@ -78,7 +76,7 @@ void MotorRoutine::loopByIr()
         if (preCmd != IRCommand::LEG_UP)
         {
             auto p = TableMotorController::getInstance()->getPosition();
-            if(p > 30) // 바로 움직이지 못하는 상태
+            if (p > 30) // 바로 움직이지 못하는 상태
             {
                 state = MotorWaitState::WAIT_TABLE_ORIGIN_FOR_LEG_UP;
                 TableMotorController::getInstance()->moveTo(0);
@@ -100,14 +98,14 @@ void MotorRoutine::loopByIr()
         if (preCmd != IRCommand::LEG_DOWN)
         {
             auto p = TableMotorController::getInstance()->getPosition();
-            if(p > 30) // 바로 움직이지 못하는 상태
+            if (p > 30) // 바로 움직이지 못하는 상태
             {
                 state = MotorWaitState::WAIT_TABLE_ORIGIN_FOR_LEG_DOWN;
                 TableMotorController::getInstance()->moveTo(0);
             }
             else
             {
-                LegrestMotorController::getInstance()->moveTo(LEGREST_MAX);
+                LegrestMotorController::getInstance()->moveTo(0);
             }
             preCmd = cmd;
         }
@@ -122,7 +120,7 @@ void MotorRoutine::loopByIr()
         if (preCmd != IRCommand::TABLE_FORWARD)
         {
             auto p = LegrestMotorController::getInstance()->getPosition();
-            if(p > 30) // 바로 움직이지 못하는 상태
+            if (p > 30) // 바로 움직이지 못하는 상태
             {
                 state = MotorWaitState::WAIT_LEG_ORIGIN_FOR_TABLE_FORWARD;
                 LegrestMotorController::getInstance()->moveTo(0);
@@ -144,7 +142,7 @@ void MotorRoutine::loopByIr()
         if (preCmd != IRCommand::TABLE_BACKWARD)
         {
             auto p = LegrestMotorController::getInstance()->getPosition();
-            if(p > 30) // 바로 움직이지 못하는 상태
+            if (p > 30) // 바로 움직이지 못하는 상태
             {
                 state = MotorWaitState::WAIT_LEG_ORIGIN_FOR_TABLE_BACKWARD;
                 LegrestMotorController::getInstance()->moveTo(0);
@@ -186,14 +184,23 @@ void MotorRoutine::loopByIr()
         break;
 
     case IRCommand::SPEAKER:
-        if(SpeakerController::getInstance()->isOn())
+        if (SpeakerController::getInstance()->isOn())
             SpeakerController::getInstance()->off();
         else
             SpeakerController::getInstance()->on();
         break;
 
     case IRCommand::LIGHT:
-        // TODO: add handling
+        if (!ledState)
+        {
+            LedController::getInstance()->run();
+            ledState =true;
+        }
+        else
+        {
+            LedController::getInstance()->stop();
+            ledState = false;
+        }
         break;
 
     case IRCommand::NONE:

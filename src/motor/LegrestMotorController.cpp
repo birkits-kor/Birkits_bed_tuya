@@ -70,12 +70,12 @@ void LegrestMotorController::moveTo(uint16_t targetPosition)
     if (!_enabled)
         return;
     _targetPosition = targetPosition;
-    if (_position < _targetPosition)
+    if (_position < _targetPosition || _targetPosition >= LEGREST_MAX)
     {
         _startTime = millis();
         moveForward();
     }
-    else if (_position > _targetPosition)
+    else if (_position > _targetPosition || _targetPosition == 0)
     {
         _startTime = millis();
         moveBackward();
@@ -91,11 +91,11 @@ void LegrestMotorController::updatePos()
 
     if (_ischange)
     {
-        _ischange = false;
-        Serial.printf("LegrestMotor move done!!\n");
+        Serial.printf("LegrestMotor move done[%d]!!\n", _position);
         if (_position == 0 || _position == LEGREST_MAX)
             delay(1000);
-        LegrestMotorController::getInstance()->stopMotor();
+        stopMotor();
+        _ischange = false;
         NVSStorage::getInstance().saveCredential(_name, String((_position / 10) * 10));
     }
 
@@ -158,4 +158,5 @@ void LegrestMotorController::stopMotor()
     digitalWrite(_pin1, LOW);
     digitalWrite(_pin2, LOW);
     _state = MOTOR_STOPPED;
+    _ischange = true;
 }

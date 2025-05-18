@@ -40,7 +40,6 @@ void NVSStorage::saveCredential(const String &key, const String &value)
         if (value == String(existing_value))
         {
             // 값이 같으면 저장 생략
-            Serial.println("Value unchanged, skipping NVS write");
             delete[] existing_value;
             nvs_close(nvsHandle);
             return;
@@ -66,7 +65,7 @@ void NVSStorage::saveCredential(const String &key, const String &value)
     }
     else
     {
-        Serial.println("Credential saved successfully");
+        Serial.printf("Save [%s]:%s\n", key.c_str(), value.c_str());
     }
 
     nvs_close(nvsHandle);
