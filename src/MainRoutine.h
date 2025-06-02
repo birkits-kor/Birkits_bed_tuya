@@ -8,6 +8,7 @@
 #include "communication/TuyaMQTTClient.h"
 #include "routine/RestartRoutine.h"
 #include "routine/MotorRoutine.h"
+#include "routine/ConversionRoutine.h"
 #include "storage/NVSStorage.h"
 #include "communication/IRDecoder.h"
 
@@ -26,6 +27,7 @@ private:
     WiFiClientSecure espClient;
     RestartRoutine restartRoutine = RestartRoutine(0, 5000);
     MotorRoutine motorRoutine;
+    ConversionRoutine conversionRoutine;
     IRDecoder irDecoder;
 
     const int mqtt_port = 8883;                // MQTT port (TLS)

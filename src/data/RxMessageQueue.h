@@ -1,13 +1,13 @@
-#ifndef MESSAGE_QUEUE_H
-#define MESSAGE_QUEUE_H
+#ifndef RX_MESSAGE_QUEUE_H
+#define RX_MESSAGE_QUEUE_H
 
 #include <Arduino.h>
 #include <queue>
 
-class MessageQueue
+class RxMessageQueue
 {
 public:
-    static MessageQueue &getInstance();
+    static RxMessageQueue &getInstance();
 
     void push(const String &topic, const String &message);
     bool isEmpty() const;
@@ -15,7 +15,7 @@ public:
     std::pair<String, String> peek() const;
 
 private:
-    MessageQueue() = default;
+    RxMessageQueue() = default;
     std::queue<std::pair<String, String>> queue;
 };
 

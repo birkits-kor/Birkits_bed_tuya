@@ -27,6 +27,7 @@ void MainRoutine::init()
 
     Serial.printf("setup done wifiManager[%d] timeManager[%d] tuyaMQTTClient[%d]\n", wifiManager_result, timeManager_result, tuyaMQTTClient_result);
     motorRoutine.begin();
+    conversionRoutine.begin();
     irDecoder.setup();
 }
 
@@ -37,6 +38,7 @@ void MainRoutine::do1msTasks()
     {
         prev1ms = now;
         tuyaMQTTClient.loop();
+        conversionRoutine.loop();
     }
 }
 

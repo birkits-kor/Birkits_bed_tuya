@@ -7,6 +7,7 @@
 
 #define SHA256HMAC_SIZE 32
 
+
 static const char ca_cert[]{
     "-----BEGIN CERTIFICATE-----\n"
     "MIIDxTCCAq2gAwIBAgIBADANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMCVVMx\n"
@@ -51,6 +52,7 @@ private:
     const char *mqtt_topic = "tylink/%s/thing/model/get";
     String device_id;
     String device_secret;
+    char publish_topic[64];
 };
 
 #endif // TUYA_MQTT_CLIENT_H

@@ -7,6 +7,8 @@ void keyboardTest(char c);
 void setup()
 {
     mainRoutine.init();
+    pinMode(34, INPUT);
+    pinMode(35, INPUT);
 }
 
 void loop()
@@ -14,9 +16,9 @@ void loop()
     mainRoutine.do1msTasks();
     mainRoutine.do10msTasks();
     mainRoutine.do100msTasks();
-
-    if (Serial.available() > 0)
-        keyboardTest(Serial.read());
+    
+    delay(3000);
+    
 }
 
 void keyboardTest(char c)
