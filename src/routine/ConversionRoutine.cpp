@@ -2,10 +2,20 @@
 #include "../data/TxMessageQueue.h"
 #include "../data/BirkitsData.h"
 
+#include "../motor/BackrestMotorController.h"
+#include "../motor/LegrestMotorController.h"
+#include "../motor/TableMotorController.h"
+#include "../motor/SpeakerController.h"
+#include "../led/LedController.h"
+
 void ConversionRoutine::begin()
 {
     jsonConversionHandler.registerCallback("init", [this](const String &payload)
                                            { this->intfunc(payload); });
+    jsonConversionHandler.registerCallback("speaker_switch", [this](const String &payload)
+                                           { this->speakerfunc(payload); });
+
+
 }
 
 void ConversionRoutine::loop()
@@ -27,10 +37,8 @@ void ConversionRoutine::intfunc(const String &payload)
 
     auto modeData = makeModeData("init");
     TxMessageQueue::getInstance().push(modeData);
-
     auto alramData = makeAlarmData("init");
     TxMessageQueue::getInstance().push(alramData);
-
     int id;
     unsigned long timestamp;
     if (BirkitsData::getInstance().getTimerData(id, timestamp))
@@ -40,10 +48,29 @@ void ConversionRoutine::intfunc(const String &payload)
     }
 }
 
+void ConversionRoutine::speakerfunc(const String &payload)
+{
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, payload);
+    if (doc.containsKey("speaker_switch")) {
+        bool v = doc["speaker_switch"];
+        if(v)
+            SpeakerController::getInstance()->on();
+        else
+            SpeakerController::getInstance()->off();
+    }
+}
+
+
+
+
+
+
 String ConversionRoutine::makeBedControlData(String topic)
 {
-    int b, l, t;
-    BirkitsData::getInstance().getMotorPosition(b, l, t);
+    auto b = BackrestMotorController::getInstance()->getPosition();
+    auto l = LegrestMotorController::getInstance()->getPosition();
+    auto t = TableMotorController::getInstance()->getPosition();
     StaticJsonDocument<256> doc;
     JsonObject data = doc.createNestedObject("data");
     data["topic"] = topic;
@@ -65,7 +92,7 @@ String ConversionRoutine::makeLightControlData(String topic)
     bool sw;
 
     // 현재 저장된 lightControl 데이터 가져오기
-    BirkitsData::getInstance().getLightControlData(h, s, l, endTime, startTime, mode, sw);
+    LedController::getInstance()->getLightControlData(h, s, l, endTime, startTime, mode, sw);
 
     // JSON 구성
     StaticJsonDocument<512> doc;
@@ -93,7 +120,7 @@ String ConversionRoutine::makeLightControlData(String topic)
 String ConversionRoutine::makeSpeakerSwData(String topic)
 {
     // BirkitsData에서 speaker_switch 값 가져오기
-    bool sw = BirkitsData::getInstance().getSpeakerSwitch();
+    bool sw = SpeakerController::getInstance()->isOn();
 
     // JSON 생성
     StaticJsonDocument<256> doc;

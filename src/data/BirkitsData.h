@@ -5,16 +5,6 @@
 #include <ArduinoJson.h>
 #include <vector>
 
-struct LightControlData
-{
-    int h, s;
-    double l;                // RGB 또는 HSL 등 색상 3값
-    String light_end_time;   // "06:00"
-    String light_start_time; // "16:00"
-    String light_mode;       // "mode_a"
-    bool light_switch;       // true / false
-};
-
 struct ModeData
 {
     int lower;      // bed.lower
@@ -54,21 +44,7 @@ class BirkitsData
 {
 public:
     static BirkitsData &getInstance();
-    void getMotorPosition(int &b, int &l, int &t);
 
-    void getLightControlData(int &h, int &s, double &l,
-                             String &endTime,
-                             String &startTime,
-                             String &mode,
-                             bool &sw) const;
-    void setLightControlData(int h, int s, double l,
-                             const String &endTime,
-                             const String &startTime,
-                             const String &mode,
-                             bool sw);
-
-    void setSpeakerSwitch(bool sw);
-    bool getSpeakerSwitch() const;
     std::vector<ModeData> getModeDataList() const;
     std::vector<AlarmData> getAlarmDataList() const;
     void setTimerData(unsigned long timestamp, int id, bool isActive);
@@ -81,7 +57,6 @@ private:
     BirkitsData(); // 생성자 private
     ~BirkitsData() = default;
 
-    LightControlData lightControlData;
     unsigned long startTime;
     bool speaker_switch = false;
     TimerData timerData;

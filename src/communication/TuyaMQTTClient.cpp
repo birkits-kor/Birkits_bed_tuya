@@ -150,17 +150,13 @@ int TuyaMQTTClient::calcSignature(const char *deviceId, const char *deviceSecret
 
 void TuyaMQTTClient::mqttCallback(char *topic, byte *payload, unsigned int length)
 {
-  String message;
-  for (unsigned int i = 0; i < length; ++i)
-  {
-    message += (char)payload[i];
-  }
   StaticJsonDocument<4096> doc;
   DeserializationError error = deserializeJson(doc, payload, length);
+
   if (!error && doc["data"].containsKey("topic"))
   {
     auto a = doc["data"]["topic"].as<String>();
-    auto b = doc["data"]["data"].as<String>();
+    auto b = doc["data"].as<String>();
     RxMessageQueue::getInstance().push(a, b);
   }
 }

@@ -23,25 +23,25 @@ void LedController::setup()
     _strip2.begin();
     _strip2.show(); // 모든 LED 꺼짐
     loadSavedData();
-    hsvToRgb(_h, _s, _v, _r, _g, _b);
+    hsvToRgb(lightControlData.h, lightControlData.s, lightControlData.l, _r, _g, _b);
 }
 
 void LedController::set(uint16_t h, uint16_t s, uint8_t v, uint8_t mode,
                         uint8_t startHour, uint8_t startMinute,
                         uint8_t endHour, uint8_t endMinute)
 {
-    _h = h;
-    _s = s;
-    _v = v;
-    _mode = mode;
-    _startHour = startHour;
-    _startMinute = startMinute;
-    _endHour = endHour;
-    _endMinute = endMinute;
+    // _h = h;
+    // _s = s;
+    // _v = v;
+    // _mode = mode;
+    // _startHour = startHour;
+    // _startMinute = startMinute;
+    // _endHour = endHour;
+    // _endMinute = endMinute;
 
-    hsvToRgb(_h, _s, _v, _r, _g, _b);
-    saveData();
-    reset();
+    // hsvToRgb(_h, _s, _v, _r, _g, _b);
+    // saveData();
+    // reset();
 }
 void LedController::reset()
 {
@@ -59,41 +59,34 @@ void LedController::stop()
     _strip2.show();
 }
 
-void LedController::get(uint16_t &h, uint16_t &s, uint8_t &v, uint8_t &mode, uint8_t &startHour, uint8_t &startMin, uint8_t &endHour, uint8_t &endMin)
-{
-    h = _h;
-    s = _s;
-    v = _v;
-    mode = _mode;
 
-    startHour = _startHour;
-    startMin = _startMinute;
-    endHour = _endHour;
-    endMin = _endMinute;
+void LedController::getLightControlData(int &h, int &s, double &l,
+                                      String &endTime,
+                                      String &startTime,
+                                      String &mode,
+                                      bool &sw) const
+{
+    h = lightControlData.h;
+    s = lightControlData.s;
+    l = lightControlData.l;
+    endTime = lightControlData.light_end_time;
+    startTime = lightControlData.light_start_time;
+    mode = lightControlData.light_mode;
+    sw = lightControlData.light_switch;
 }
 
 void LedController::run()
 {
     ++_count;
 
-    switch (_mode)
-    {
-    case 1:
+    if (lightControlData.light_mode == "mode_a")
         mode1();
-        break;
-
-    case 2:
+    else if (lightControlData.light_mode == "mode_b")
         mode2();
-        break;
-
-    case 3:
+    else if (lightControlData.light_mode == "mode_c")
         mode3();
-        break;
-
-    case 4:
+    else if (lightControlData.light_mode == "mode_d")
         mode4();
-        break;
-    }
 }
 
 void LedController::mode1()
@@ -114,7 +107,7 @@ void LedController::mode2()
     uint8_t phase = (_count % 20); // 2초 주기 (100ms * 20)
     uint8_t brightness = (phase < 10) ? (phase * 10) : ((20 - phase) * 10);
     uint8_t r, g, b;
-    hsvToRgb(_h, _s, brightness, r, g, b);
+    hsvToRgb(lightControlData.h, lightControlData.s, brightness, r, g, b);
     for (int i = 0; i < LED_COUNT; ++i)
     {
         _strip1.setPixelColor(i, r, g, b);
@@ -154,58 +147,47 @@ void LedController::mode4()
 
 void LedController::loadSavedData()
 {
-    String val = NVSStorage::getInstance().getCredential("led_config");
-    if (val.length() == 0)
+    String lightDataStr = NVSStorage::getInstance().getCredential("light_control");
+    StaticJsonDocument<512> doc;
+    DeserializationError error = deserializeJson(doc, lightDataStr);
+
+    if (!error)
     {
-        _h = 0;
-        _s = 0;
-        _v = 100;
-        _mode = 1;
-        _startHour = 0;
-        _startMinute = 0;
-        _endHour = 23;
-        _endMinute = 59;
-        saveData();
-        return;
+        JsonObject obj = doc.as<JsonObject>();
+
+        JsonArray color = obj["light_color"];
+        lightControlData.h = color[0];
+        lightControlData.s = color[1];
+        lightControlData.l = color[2];
+
+        lightControlData.light_end_time = obj["light_end_time"] | "";
+        lightControlData.light_start_time = obj["light_start_time"] | "";
+        lightControlData.light_mode = obj["light_mode"] | "";
+        lightControlData.light_switch = obj["light_switch"] | false;
     }
-
-    int sep1 = val.indexOf(',');
-    int sep2 = val.indexOf(',', sep1 + 1);
-    int sep3 = val.indexOf(',', sep2 + 1);
-    int sep4 = val.indexOf(',', sep3 + 1);
-    int sep5 = val.indexOf(',', sep4 + 1);
-    int sep6 = val.indexOf(',', sep5 + 1);
-    int sep7 = val.indexOf(',', sep6 + 1);
-
-    _h = val.substring(0, sep1).toInt();
-    _s = val.substring(sep1 + 1, sep2).toInt();
-    _v = val.substring(sep2 + 1, sep3).toInt();
-    _mode = val.substring(sep3 + 1, sep4).toInt();
-    _startHour = val.substring(sep4 + 1, sep5).toInt();
-    _startMinute = val.substring(sep5 + 1, sep6).toInt();
-    _endHour = val.substring(sep6 + 1, sep7).toInt();
-    _endMinute = val.substring(sep7 + 1).toInt();
+    else
+    {
+        // 파싱 실패 시 기본값 설정 (옵션)
+        lightControlData = {
+            0,
+            0,
+            50.0,
+            "14:00",
+            "06:00",
+            "none",
+            false};
+    }
 }
 
 void LedController::saveData()
 {
-    String val = String(_h) + "," +
-                 String(_s) + "," +
-                 String(_v) + "," +
-                 String(_mode) + "," +
-                 String(_startHour) + "," +
-                 String(_startMinute) + "," +
-                 String(_endHour) + "," +
-                 String(_endMinute);
-
-    NVSStorage::getInstance().saveCredential("led_config", val);
 }
 
-void LedController::hsvToRgb(uint16_t h, uint16_t s, uint8_t v, uint8_t &r, uint8_t &g, uint8_t &b)
+void LedController::hsvToRgb(uint16_t h, uint16_t s, double l, uint8_t &r, uint8_t &g, uint8_t &b)
 {
     float hf = (float)h / 360.0f;
     float sf = (float)s / 1000.0f;
-    float vf = (float)v / 100.0f;
+    float vf = (float)l / 100.0f;
 
     int i = int(hf * 6);
     float f = hf * 6 - i;

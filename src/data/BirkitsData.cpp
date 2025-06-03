@@ -1,40 +1,9 @@
 #include "BirkitsData.h"
-#include "../motor/BackrestMotorController.h"
-#include "../motor/LegrestMotorController.h"
-#include "../motor/TableMotorController.h"
+#include "../storage/NVSStorage.h"
 
 BirkitsData::BirkitsData()
 {
-    String lightDataStr = NVSStorage::getInstance().getCredential("light_control");
-    StaticJsonDocument<512> doc;
-    DeserializationError error = deserializeJson(doc, lightDataStr);
-
-    if (!error)
-    {
-        JsonObject obj = doc.as<JsonObject>();
-
-        JsonArray color = obj["light_color"];
-        lightControlData.h = color[0];
-        lightControlData.s = color[1];
-        lightControlData.l = color[2];
-
-        lightControlData.light_end_time = obj["light_end_time"] | "";
-        lightControlData.light_start_time = obj["light_start_time"] | "";
-        lightControlData.light_mode = obj["light_mode"] | "";
-        lightControlData.light_switch = obj["light_switch"] | false;
-    }
-    else
-    {
-        // 파싱 실패 시 기본값 설정 (옵션)
-        lightControlData = {
-            0,
-            0,
-            50.0,
-            "14:00",
-            "06:00",
-            "none",
-            false};
-    }
+   
 }
 
 BirkitsData &BirkitsData::getInstance()
@@ -43,52 +12,35 @@ BirkitsData &BirkitsData::getInstance()
     return instance;
 }
 
-void BirkitsData::getMotorPosition(int &b, int &l, int &t)
-{
-    b = BackrestMotorController::getInstance()->getPosition();
-    l = LegrestMotorController::getInstance()->getPosition();
-    t = TableMotorController::getInstance()->getPosition();
-}
+// void BirkitsData::setLightControlData(int h, int s, double l,
+//                                       const String &endTime,
+//                                       const String &startTime,
+//                                       const String &mode,
+//                                       bool sw)
+// {
+//     lightControlData.h = h;
+//     lightControlData.s = s;
+//     lightControlData.l = l;
+//     lightControlData.light_end_time = endTime;
+//     lightControlData.light_start_time = startTime;
+//     lightControlData.light_mode = mode;
+//     lightControlData.light_switch = sw;
+// }
 
-void BirkitsData::setLightControlData(int h, int s, double l,
-                                      const String &endTime,
-                                      const String &startTime,
-                                      const String &mode,
-                                      bool sw)
-{
-    lightControlData.h = h;
-    lightControlData.s = s;
-    lightControlData.l = l;
-    lightControlData.light_end_time = endTime;
-    lightControlData.light_start_time = startTime;
-    lightControlData.light_mode = mode;
-    lightControlData.light_switch = sw;
-}
-
-void BirkitsData::getLightControlData(int &h, int &s, double &l,
-                                      String &endTime,
-                                      String &startTime,
-                                      String &mode,
-                                      bool &sw) const
-{
-    h = lightControlData.h;
-    s = lightControlData.s;
-    l = lightControlData.l;
-    endTime = lightControlData.light_end_time;
-    startTime = lightControlData.light_start_time;
-    mode = lightControlData.light_mode;
-    sw = lightControlData.light_switch;
-}
-
-void BirkitsData::setSpeakerSwitch(bool sw)
-{
-    speaker_switch = sw;
-}
-
-bool BirkitsData::getSpeakerSwitch() const
-{
-    return speaker_switch;
-}
+// void BirkitsData::getLightControlData(int &h, int &s, double &l,
+//                                       String &endTime,
+//                                       String &startTime,
+//                                       String &mode,
+//                                       bool &sw) const
+// {
+//     h = lightControlData.h;
+//     s = lightControlData.s;
+//     l = lightControlData.l;
+//     endTime = lightControlData.light_end_time;
+//     startTime = lightControlData.light_start_time;
+//     mode = lightControlData.light_mode;
+//     sw = lightControlData.light_switch;
+// }
 
 std::vector<ModeData> BirkitsData::getModeDataList() const
 {
