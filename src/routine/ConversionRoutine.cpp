@@ -1,10 +1,11 @@
 #include "ConversionRoutine.h"
+#include "../data/TxMessageQueue.h"
+#include "../data/BirkitsData.h"
 
 void ConversionRoutine::begin()
 {
-    jsonConversionHandler.registerCallback("init", [this](const String &payload) {
-        this->intfunc(payload);
-    });
+    jsonConversionHandler.registerCallback("init", [this](const String &payload)
+                                           { this->intfunc(payload); });
 }
 
 void ConversionRoutine::loop()
@@ -14,5 +15,204 @@ void ConversionRoutine::loop()
 
 void ConversionRoutine::intfunc(const String &payload)
 {
-    Serial.println("[init] payload received: " + payload);
+    Serial.println("[init]");
+    auto bedControlData = makeBedControlData("init");
+    TxMessageQueue::getInstance().push(bedControlData);
+
+    auto lightControlData = makeLightControlData("init");
+    TxMessageQueue::getInstance().push(lightControlData);
+
+    auto speakerSwData = makeSpeakerSwData("init");
+    TxMessageQueue::getInstance().push(speakerSwData);
+
+    auto modeData = makeModeData("init");
+    TxMessageQueue::getInstance().push(modeData);
+
+    auto alramData = makeAlarmData("init");
+    TxMessageQueue::getInstance().push(alramData);
+
+    int id;
+    unsigned long timestamp;
+    if (BirkitsData::getInstance().getTimerData(id, timestamp))
+    {
+        auto timerData = makeTimerData("init");
+        TxMessageQueue::getInstance().push(timerData);
+    }
+}
+
+String ConversionRoutine::makeBedControlData(String topic)
+{
+    int b, l, t;
+    BirkitsData::getInstance().getMotorPosition(b, l, t);
+    StaticJsonDocument<256> doc;
+    JsonObject data = doc.createNestedObject("data");
+    data["topic"] = topic;
+    JsonObject bedControl = data.createNestedObject("bed_control");
+    bedControl["bed_angle"] = b;
+    bedControl["bed_position"] = l;
+    bedControl["desk_position"] = t;
+    String result;
+    serializeJson(doc, result);
+    Serial.println(result); // 디버깅용
+    return result;
+}
+
+String ConversionRoutine::makeLightControlData(String topic)
+{
+    int h, s;
+    double l;
+    String endTime, startTime, mode;
+    bool sw;
+
+    // 현재 저장된 lightControl 데이터 가져오기
+    BirkitsData::getInstance().getLightControlData(h, s, l, endTime, startTime, mode, sw);
+
+    // JSON 구성
+    StaticJsonDocument<512> doc;
+
+    JsonObject data = doc.createNestedObject("data");
+    data["topic"] = topic;
+
+    JsonObject light = data.createNestedObject("light_control");
+    JsonArray color = light.createNestedArray("light_color");
+    color.add(h);
+    color.add(s);
+    color.add(l);
+
+    light["light_end_time"] = endTime;
+    light["light_start_time"] = startTime;
+    light["light_mode"] = mode;
+    light["light_switch"] = sw;
+
+    String result;
+    serializeJson(doc, result);
+    Serial.println(result); // 디버깅용
+    return result;
+}
+
+String ConversionRoutine::makeSpeakerSwData(String topic)
+{
+    // BirkitsData에서 speaker_switch 값 가져오기
+    bool sw = BirkitsData::getInstance().getSpeakerSwitch();
+
+    // JSON 생성
+    StaticJsonDocument<256> doc;
+    JsonObject data = doc.createNestedObject("data");
+    data["topic"] = topic;
+    data["speaker_switch"] = sw;
+
+    // JSON 직렬화
+    String result;
+    serializeJson(doc, result);
+    Serial.println(result); // 디버깅용
+    return result;
+}
+
+String ConversionRoutine::makeModeData(String topic)
+{
+    auto dataList = BirkitsData::getInstance().getModeDataList();
+
+    StaticJsonDocument<2048> doc;
+    JsonObject root = doc.createNestedObject("data");
+
+    root["topic"] = topic;
+    JsonArray modeArray = root.createNestedArray("mode_data");
+
+    for (const ModeData &m : dataList)
+    {
+        JsonObject modeObj = modeArray.createNestedObject();
+        JsonObject bedObj = modeObj.createNestedObject("data").createNestedObject("bed");
+
+        bedObj["lower"] = m.lower;
+        bedObj["table"] = m.table;
+        bedObj["upper"] = m.upper;
+
+        modeObj["id"] = m.id;
+        modeObj["index"] = m.index;
+        modeObj["title"] = m.title;
+    }
+
+    String result;
+    serializeJson(doc, result);
+    Serial.println(result); // 디버깅용
+    return result;
+}
+
+String ConversionRoutine::makeAlarmData(String topic)
+{
+    auto alarmList = BirkitsData::getInstance().getAlarmDataList();
+
+    StaticJsonDocument<2048> doc;
+    JsonObject root = doc.createNestedObject("data");
+
+    root["topic"] = topic;
+    JsonArray alarmArray = root.createNestedArray("alarm_data");
+
+    for (const AlarmData &a : alarmList)
+    {
+        JsonObject alarmObj = alarmArray.createNestedObject();
+        JsonObject dataObj = alarmObj.createNestedObject("data");
+
+        // alarm 객체
+        JsonObject alarm = dataObj.createNestedObject("alarm");
+        alarm["active"] = a.active;
+        JsonObject time = alarm.createNestedObject("time");
+        time["hour"] = a.time.hour;
+        time["minute"] = a.time.minute;
+
+        // weekday 배열
+        JsonArray weekdayArray = alarm.createNestedArray("weekday");
+        for (int d : a.weekday)
+        {
+            weekdayArray.add(d);
+        }
+
+        // bed 객체
+        JsonObject bed = dataObj.createNestedObject("bed");
+        bed["lower"] = a.lower;
+        bed["table"] = a.table;
+        bed["upper"] = a.upper;
+
+        // 기타 정보
+        alarmObj["id"] = a.id;
+        alarmObj["index"] = a.index;
+        alarmObj["title"] = a.title;
+    }
+
+    String result;
+    serializeJson(doc, result);
+    Serial.println(result); // 디버깅용
+    return result;
+}
+
+String ConversionRoutine::makeTimerData(String topic)
+{
+    int timerId;
+    unsigned long endTimestamp; // 타이머가 만료되는 시간 (목표 시간)
+    bool isActive = BirkitsData::getInstance().getTimerData(timerId, endTimestamp);
+
+    unsigned long currentTime = BirkitsData::getInstance().getCurrentTime();
+
+    // 남은 시간 계산 (초 단위)
+    unsigned long remaining = (endTimestamp > currentTime) ? (endTimestamp - currentTime) : 0;
+
+    // 남은 시간을 HH:MM 포맷으로 변환
+    int hour = remaining / 3600;
+    int minute = (remaining % 3600) / 60;
+
+    char timeStr[6];
+    snprintf(timeStr, sizeof(timeStr), "%02d:%02d", hour, minute);
+
+    StaticJsonDocument<256> doc;
+    JsonObject data = doc.createNestedObject("data");
+    data["topic"] = topic;
+
+    JsonObject timerControl = data.createNestedObject("timer_control");
+    timerControl["timer_data"] = String(timeStr);
+    timerControl["timer_id"] = timerId;
+
+    String result;
+    serializeJson(doc, result);
+    Serial.println(result);
+    return result;
 }

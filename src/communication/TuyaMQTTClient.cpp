@@ -6,52 +6,6 @@
 #include "../data/RxMessageQueue.h"
 #include "../data/TxMessageQueue.h"
 
-String payload_bedControl = "{"
-                            "\"data\":{"
-                            "\"topic\":\"init\","
-                            "\"bed_control\":{"
-                            "\"bed_angle\":0,"
-                            "\"bed_position\":0,"
-                            "\"desk_position\":0"
-                            "}"
-                            "}"
-                            "}";
-
-String payload_lightControl = "{"
-                              "\"data\":{"
-                              "\"topic\":\"init\","
-                              "\"light_control\":{"
-                              "\"light_color\":[336,804,76.02903238932292],"
-                              "\"light_end_time\":\"06:00\","
-                              "\"light_start_time\":\"16:00\","
-                              "\"light_mode\":\"mode_c\","
-                              "\"light_switch\":false"
-                              "}"
-                              "}"
-                              "}";
-
-String payload_speakerSwitch = "{"
-                               "\"data\":{"
-                               "\"topic\":\"init\","
-                               "\"speaker_switch\":false"
-                               "}"
-                               "}";
-
-String payload_modeData = "{"
-                          "\"data\":{"
-                          "\"topic\":\"init\","
-                          "\"mode_data\":["
-                          "{"
-                          "\"data\":{\"bed\":{\"lower\":0,\"table\":200,\"upper\":10}},"
-                          "\"id\":1,\"index\":1,\"title\":\"취침\""
-                          "},"
-                          "{"
-                          "\"data\":{\"bed\":{\"lower\":20,\"table\":400,\"upper\":30}},"
-                          "\"id\":2,\"index\":2,\"title\":\"독서\""
-                          "}"
-                          "]"
-                          "}"
-                          "}";
 
 String payload_alarmData = "{"
                            "\"data\":{"
@@ -75,15 +29,6 @@ String payload_alarmData = "{"
                            "}"
                            "}";
 
-String payload_timerControl = "{"
-                              "\"data\":{"
-                              "\"topic\":\"init\","
-                              "\"timer_control\":{"
-                              "\"timer_data\":\"03:00\","
-                              "\"timer_id\":1"
-                              "}"
-                              "}"
-                              "}";
 
 void TuyaMQTTClient::begin(WiFiClientSecure &secureClient, const char *broker, int port)
 {
@@ -219,3 +164,6 @@ void TuyaMQTTClient::mqttCallback(char *topic, byte *payload, unsigned int lengt
     RxMessageQueue::getInstance().push(a, b);
   }
 }
+
+
+
