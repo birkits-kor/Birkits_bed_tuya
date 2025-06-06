@@ -1,26 +1,27 @@
-#include "MotorRoutine.h"
+#include "ControlRoutine.h"
 
-MotorRoutine::MotorRoutine()
+ControlRoutine::ControlRoutine()
 {
 }
 
-void MotorRoutine::begin()
+void ControlRoutine::begin()
 {
     BackrestMotorController::getInstance()->setupMotor();
     LegrestMotorController::getInstance()->setupMotor();
     TableMotorController::getInstance()->setupMotor();
     SpeakerController::getInstance();
+    LedController::getInstance()->setup();
     LedController::getInstance()->stop();
 }
 
-void MotorRoutine::updatePos()
+void ControlRoutine::updatePos()
 {
     BackrestMotorController::getInstance()->updatePos();
     LegrestMotorController::getInstance()->updatePos();
     TableMotorController::getInstance()->updatePos();
 }
 
-void MotorRoutine::loopByIr(IRCommand cmd)
+void ControlRoutine::loopByIr(IRCommand cmd)
 {
     if (state != MotorWaitState::NONE)
     {
@@ -211,4 +212,32 @@ void MotorRoutine::loopByIr(IRCommand cmd)
     {
     }
 
+}
+
+void ControlRoutine::loopLed()
+{
+    if (PirSensor::getInstance().get() && LedController::getInstance()->getSw() && ledFlag == false)
+    {
+        int h, m;
+        TimeManager::getInstance().getHourMinute(h, m);
+        if(LedController::getInstance()->isWithinLightTime(h, m))
+        {
+            ledFlag = true;
+            LedController::getInstance()->reset();
+            ledStartMillis = millis();
+        }
+    }
+
+    if (ledFlag)
+    {
+        if (millis() - ledStartMillis < 5000)
+        {
+            LedController::getInstance()->run();
+        }
+        else
+        {
+            ledFlag = false; // 5초 경과 시 종료
+            LedController::getInstance()->stop();
+        }
+    }
 }

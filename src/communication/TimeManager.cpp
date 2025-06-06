@@ -55,11 +55,7 @@ void TimeManager::computeCurrentTime(struct tm &timeinfo)
 bool TimeManager::getDateTime(int &year, int &month, int &day, int &hour, int &minute, int &second, int &weekday)
 {
     struct tm timeinfo;
-    if (WiFi.isConnected() && updateTimeFromNTP())
-    {
-        getLocalTime(&timeinfo);
-    }
-    else if (_synced)
+    if (_synced)
     {
         computeCurrentTime(timeinfo);
     }
@@ -82,11 +78,7 @@ bool TimeManager::getDateTime(int &year, int &month, int &day, int &hour, int &m
 bool TimeManager::getHourMinute(int &hour, int &minute)
 {
     struct tm timeinfo;
-    if (WiFi.isConnected() && updateTimeFromNTP())
-    {
-        getLocalTime(&timeinfo);
-    }
-    else if (_synced)
+    if (_synced)
     {
         computeCurrentTime(timeinfo);
     }

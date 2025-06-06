@@ -10,8 +10,7 @@
 
 struct LightControlData
 {
-    int h, s;
-    double l;                // RGB 또는 HSL 등 색상 3값
+    uint16_t h, s, v;                // RGB 또는 HSL 등 색상 3값
     String light_end_time;   // "06:00"
     String light_start_time; // "16:00"
     String light_mode;       // "mode_a"
@@ -24,24 +23,26 @@ public:
     static LedController *getInstance();
 
     void setup();
-    void set(uint16_t h, uint16_t s, uint8_t v, uint8_t mode,
+    void set(uint16_t h, uint16_t s, uint16_t v, uint8_t mode,
              uint8_t startHour, uint8_t startMinute,
              uint8_t endHour, uint8_t endMinute);
     void reset();                                                  // count 초기화
     void stop();                                                   // 전체 LED 꺼짐
     void run();                                                    // 주기적으로 호출
-    void getLightControlData(int &h, int &s, double &l,
+    void getLightControlData(uint16_t &h, uint16_t &s, uint16_t &v,
                                       String &endTime,
                                       String &startTime,
                                       String &mode,
                                       bool &sw) const;
+    void saveData(String data);
+    bool getSw();
+    bool isWithinLightTime(int hour, int minute);
 
 private:
     LedController();
 
     void loadSavedData();
-    void saveData();
-    void hsvToRgb(uint16_t h, uint16_t s, double l, uint8_t &r, uint8_t &g, uint8_t &b);
+    void hsvToRgb(uint16_t h, uint16_t s, uint16_t v, uint8_t &r, uint8_t &g, uint8_t &b);
 
     void mode1();
     void mode2();

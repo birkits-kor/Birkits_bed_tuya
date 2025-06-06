@@ -26,7 +26,7 @@ void MainRoutine::init()
     }
 
     Serial.printf("setup done wifiManager[%d] timeManager[%d] tuyaMQTTClient[%d]\n", wifiManager_result, timeManager_result, tuyaMQTTClient_result);
-    motorRoutine.begin();
+    controlRoutine.begin();
     conversionRoutine.begin();
     irDecoder.setup();
 }
@@ -48,9 +48,20 @@ void MainRoutine::do10msTasks()
     if (now - prev10ms >= 10)
     {
         prev10ms = now;
-        motorRoutine.loopByIr(irDecoder.getCommand());
+        controlRoutine.loopByIr(irDecoder.getCommand());
     }
 }
+
+void MainRoutine::do50msTasks()
+{
+    unsigned long now = millis();
+    if (now - prev50ms >= 50)
+    {
+        prev50ms = now;
+        controlRoutine.loopLed();
+    }
+}
+
 
 void MainRoutine::do100msTasks()
 {
@@ -60,6 +71,6 @@ void MainRoutine::do100msTasks()
         prev100ms = now;
         restartRoutine.checkRoutine();
         tuyaMQTTClient.connect();
-        motorRoutine.updatePos();
+        controlRoutine.updatePos();
     }
 }

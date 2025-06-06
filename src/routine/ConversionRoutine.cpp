@@ -14,8 +14,8 @@ void ConversionRoutine::begin()
                                            { this->intfunc(payload); });
     jsonConversionHandler.registerCallback("speaker_switch", [this](const String &payload)
                                            { this->speakerfunc(payload); });
-
-
+    jsonConversionHandler.registerCallback("light_control", [this](const String &payload)
+                                           { this->lightfunc(payload); });
 }
 
 void ConversionRoutine::loop()
@@ -61,10 +61,21 @@ void ConversionRoutine::speakerfunc(const String &payload)
     }
 }
 
-
-
-
-
+void ConversionRoutine::lightfunc(const String &payload)
+{
+    StaticJsonDocument<512> doc;
+    DeserializationError error = deserializeJson(doc, payload);
+    if (error)
+    {
+        Serial.print(F("lightfunc() failed: "));
+        Serial.println(error.f_str());
+        return;
+    }
+    JsonObject lightControl = doc["light_control"];
+    String output;
+    serializeJson(lightControl, output);
+    LedController::getInstance()->saveData(output);
+}
 
 String ConversionRoutine::makeBedControlData(String topic)
 {
@@ -86,13 +97,12 @@ String ConversionRoutine::makeBedControlData(String topic)
 
 String ConversionRoutine::makeLightControlData(String topic)
 {
-    int h, s;
-    double l;
+    uint16_t h, s, v;
     String endTime, startTime, mode;
     bool sw;
 
     // 현재 저장된 lightControl 데이터 가져오기
-    LedController::getInstance()->getLightControlData(h, s, l, endTime, startTime, mode, sw);
+    LedController::getInstance()->getLightControlData(h, s, v, endTime, startTime, mode, sw);
 
     // JSON 구성
     StaticJsonDocument<512> doc;
@@ -104,7 +114,7 @@ String ConversionRoutine::makeLightControlData(String topic)
     JsonArray color = light.createNestedArray("light_color");
     color.add(h);
     color.add(s);
-    color.add(l);
+    color.add(v);
 
     light["light_end_time"] = endTime;
     light["light_start_time"] = startTime;

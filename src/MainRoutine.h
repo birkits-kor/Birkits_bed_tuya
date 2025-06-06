@@ -7,7 +7,7 @@
 #include "communication/WiFiManager.h"
 #include "communication/TuyaMQTTClient.h"
 #include "routine/RestartRoutine.h"
-#include "routine/MotorRoutine.h"
+#include "routine/ControlRoutine.h"
 #include "routine/ConversionRoutine.h"
 #include "storage/NVSStorage.h"
 #include "communication/IRDecoder.h"
@@ -18,6 +18,7 @@ public:
     void init();
     void do1msTasks();
     void do10msTasks();
+    void do50msTasks();
     void do100msTasks();
 
 private:
@@ -26,7 +27,7 @@ private:
     TuyaMQTTClient tuyaMQTTClient;
     WiFiClientSecure espClient;
     RestartRoutine restartRoutine = RestartRoutine(0, 5000);
-    MotorRoutine motorRoutine;
+    ControlRoutine controlRoutine;
     ConversionRoutine conversionRoutine;
     IRDecoder irDecoder;
 
@@ -35,6 +36,7 @@ private:
 
     unsigned long prev1ms = 0;
     unsigned long prev10ms = 0;
+    unsigned long prev50ms = 0;
     unsigned long prev100ms = 0;
 };
 

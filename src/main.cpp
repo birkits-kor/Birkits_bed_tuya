@@ -15,10 +15,9 @@ void loop()
 {
     mainRoutine.do1msTasks();
     mainRoutine.do10msTasks();
+    mainRoutine.do50msTasks();
     mainRoutine.do100msTasks();
-    
-    delay(3000);
-    
+    delay(1);
 }
 
 void keyboardTest(char c)

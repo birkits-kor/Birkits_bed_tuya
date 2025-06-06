@@ -76,11 +76,6 @@ void NVSStorage::saveCredential(const String &key, const String &value)
     {
         Serial.printf("NVS commit failed: %s\n", esp_err_to_name(err));
     }
-    else
-    {
-        Serial.printf("Save [%s]:%s\n", key.c_str(), value.c_str());
-    }
-
     nvs_close(nvsHandle);
 }
 

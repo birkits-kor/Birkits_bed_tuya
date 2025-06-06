@@ -15,6 +15,7 @@ private:
     JsonConversionHandler jsonConversionHandler;
     void intfunc(const String &payload);
     void speakerfunc(const String &payload);
+    void lightfunc(const String &payload);
 
     String makeBedControlData(String topic);
     String makeLightControlData(String topic);
