@@ -1,7 +1,14 @@
 #include "ControlRoutine.h"
 
+ControlMode ControlRoutine::controlMode = ControlMode::None;
+MotorWaitState ControlRoutine::state = MotorWaitState::NONE;
+BedData ControlRoutine::bedData;
+
 ControlRoutine::ControlRoutine()
 {
+    bedData.bed_angle = BackrestMotorController::getInstance()->getPosition();
+    bedData.bed_position = LegrestMotorController::getInstance()->getPosition();
+    bedData.desk_position = TableMotorController::getInstance()->getPosition();
 }
 
 void ControlRoutine::begin()
@@ -23,6 +30,22 @@ void ControlRoutine::updatePos()
 
 void ControlRoutine::loopByIr(IRCommand cmd)
 {
+    // APP에서 IR로 넘어옴
+    if (controlMode != ControlMode::IR && cmd != IRCommand::NONE)
+    {
+        controlMode = ControlMode::IR;
+        if (cmd >= IRCommand::BACKREST_UP && IRCommand::BACKREST_UP <= IRCommand::POSE6)
+        {
+            preCmd = IRCommand::NONE;
+            BackrestMotorController::getInstance()->stopMotor();
+            LegrestMotorController::getInstance()->stopMotor();
+            TableMotorController::getInstance()->stopMotor();
+        }
+    }
+
+    if (controlMode != ControlMode::IR) // APP 제어 중
+        return;
+
     if (state != MotorWaitState::NONE)
     {
         switch (state)
@@ -30,7 +53,29 @@ void ControlRoutine::loopByIr(IRCommand cmd)
         case MotorWaitState::WAIT_TABLE_ORIGIN_FOR_LEG_UP:
             if (TableMotorController::getInstance()->getPosition() < 30)
             {
+                LegrestMotorController::getInstance()->moveTo(LEGREST_MAX);
+                state = MotorWaitState::NONE;
+            }
+            break;
+        case MotorWaitState::WAIT_TABLE_ORIGIN_FOR_LEG_DOWN:
+            if (TableMotorController::getInstance()->getPosition() < 30)
+            {
+                LegrestMotorController::getInstance()->moveTo(0);
+                state = MotorWaitState::NONE;
+            }
+            break;
+        case MotorWaitState::WAIT_LEG_ORIGIN_FOR_TABLE_FORWARD:
+            if (LegrestMotorController::getInstance()->getPosition() < 30)
+            {
                 TableMotorController::getInstance()->moveTo(TABLE_MAX);
+                state = MotorWaitState::NONE;
+            }
+            break;
+        case MotorWaitState::WAIT_LEG_ORIGIN_FOR_TABLE_BACKWARD:
+            if (LegrestMotorController::getInstance()->getPosition() < 30)
+            {
+                TableMotorController::getInstance()->moveTo(0);
+                state = MotorWaitState::NONE;
             }
             break;
         }
@@ -207,11 +252,59 @@ void ControlRoutine::loopByIr(IRCommand cmd)
         break;
     }
 
-    //원점 설정 여부에 따라 로직 구현 다름름
-    if(mode && modeFlag)
+    // 원점 설정 여부에 따라 로직 구현 다름름
+    if (mode && modeFlag)
     {
     }
+}
 
+void ControlRoutine::loopByApp()
+{
+    if (controlMode != ControlMode::App || state == MotorWaitState::DONE_MODE) // APP 제어 중
+        return;
+
+    if (state == MotorWaitState::WAIT_TABLE_ORIGIN_FOR_MODE && TableMotorController::getInstance()->getPosition() < 30)
+    {
+        BackrestMotorController::getInstance()->moveTo(bedData.bed_position);
+        LegrestMotorController::getInstance()->moveTo(bedData.bed_angle);
+        TableMotorController::getInstance()->moveTo(bedData.desk_position);
+        state = MotorWaitState::DONE_MODE;
+        return;
+    }
+
+     if (state == MotorWaitState::WAIT_LEG_ORIGIN_FOR_MODE && LegrestMotorController::getInstance()->getPosition() < 30)
+    {
+        BackrestMotorController::getInstance()->moveTo(bedData.bed_position);
+        LegrestMotorController::getInstance()->moveTo(bedData.bed_angle);
+        TableMotorController::getInstance()->moveTo(bedData.desk_position);
+        state = MotorWaitState::DONE_MODE;
+        return;
+    }
+
+    // 충돌 예방
+    if (bedData.bed_angle > 0)
+        bedData.desk_position = 0;
+    else if (bedData.desk_position > 0)
+        bedData.bed_angle = 0;
+
+    if (bedData.bed_angle != 0 && bedData.desk_position == 0 && TableMotorController::getInstance()->getPosition() > 30) // 테이블 먼저 움직이고 다른거 하기기
+    {
+        TableMotorController::getInstance()->moveTo(0);
+        state = MotorWaitState::WAIT_TABLE_ORIGIN_FOR_MODE;
+        return;
+    }
+
+    if (bedData.desk_position != 0 && bedData.bed_angle == 0 && LegrestMotorController::getInstance()->getPosition() > 30) // 테이블 먼저 움직이고 다른거 하기기
+    {
+        LegrestMotorController::getInstance()->moveTo(0);
+        state = MotorWaitState::WAIT_LEG_ORIGIN_FOR_MODE;
+        return;
+    }
+    Serial.println("move");
+    BackrestMotorController::getInstance()->moveTo(bedData.bed_position);
+    LegrestMotorController::getInstance()->moveTo(bedData.bed_angle);
+    TableMotorController::getInstance()->moveTo(bedData.desk_position);
+    state = MotorWaitState::DONE_MODE;
 }
 
 void ControlRoutine::loopLed()
@@ -220,7 +313,7 @@ void ControlRoutine::loopLed()
     {
         int h, m;
         TimeManager::getInstance().getHourMinute(h, m);
-        if(LedController::getInstance()->isWithinLightTime(h, m))
+        if (LedController::getInstance()->isWithinLightTime(h, m))
         {
             ledFlag = true;
             LedController::getInstance()->reset();
@@ -240,4 +333,16 @@ void ControlRoutine::loopLed()
             LedController::getInstance()->stop();
         }
     }
+}
+
+void ControlRoutine::setBedData(const BedData &data)
+{
+    // 데이터 변경 시 일시 정지 후 데이터 처리리
+    bedData = data;
+    controlMode = ControlMode::App;
+    BackrestMotorController::getInstance()->stopMotor();
+    LegrestMotorController::getInstance()->stopMotor();
+    TableMotorController::getInstance()->stopMotor();
+    state = MotorWaitState::NONE;
+    Serial.printf("%d %d %d\n", bedData.bed_angle, bedData.bed_position, bedData.desk_position);
 }

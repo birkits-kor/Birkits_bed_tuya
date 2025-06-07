@@ -16,6 +16,8 @@ private:
     void intfunc(const String &payload);
     void speakerfunc(const String &payload);
     void lightfunc(const String &payload);
+    void bedfunc(const String &payload);
+    void stopfunc(const String &payload);
 
     String makeBedControlData(String topic);
     String makeLightControlData(String topic);

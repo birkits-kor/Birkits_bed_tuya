@@ -8,6 +8,8 @@
 #include "../motor/SpeakerController.h"
 #include "../led/LedController.h"
 
+#include "ControlRoutine.h"
+
 void ConversionRoutine::begin()
 {
     jsonConversionHandler.registerCallback("init", [this](const String &payload)
@@ -16,6 +18,10 @@ void ConversionRoutine::begin()
                                            { this->speakerfunc(payload); });
     jsonConversionHandler.registerCallback("light_control", [this](const String &payload)
                                            { this->lightfunc(payload); });
+    jsonConversionHandler.registerCallback("bed_control", [this](const String &payload)
+                                           { this->bedfunc(payload); });
+    jsonConversionHandler.registerCallback("stop", [this](const String &payload)
+                                           { this->stopfunc(payload); });
 }
 
 void ConversionRoutine::loop()
@@ -77,6 +83,31 @@ void ConversionRoutine::lightfunc(const String &payload)
     LedController::getInstance()->saveData(output);
 }
 
+void ConversionRoutine::bedfunc(const String &payload)
+{
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, payload);
+    if (error) {
+        Serial.print(F("JSON parsing failed: "));
+        Serial.println(error.f_str());
+        return;
+    }
+    JsonObject bed = doc["bed_control"];
+    BedData data;
+    data.bed_angle     = map(bed["bed_angle"], 0, 35 ,0 ,LEGREST_MAX);
+    data.bed_position  = map(bed["bed_position"], 0, 80 ,0 ,BACKREST_MAX);
+    data.desk_position = map(bed["desk_position"], 0, 850 ,0 ,TABLE_MAX);
+    ControlRoutine::setBedData(data);
+}
+
+void ConversionRoutine::stopfunc(const String &payload)
+{
+    Serial.println("stopfunc");
+    BackrestMotorController::getInstance()->stopMotor();
+    LegrestMotorController::getInstance()->stopMotor();
+    TableMotorController::getInstance()->stopMotor();
+}
+
 String ConversionRoutine::makeBedControlData(String topic)
 {
     auto b = BackrestMotorController::getInstance()->getPosition();
@@ -86,9 +117,9 @@ String ConversionRoutine::makeBedControlData(String topic)
     JsonObject data = doc.createNestedObject("data");
     data["topic"] = topic;
     JsonObject bedControl = data.createNestedObject("bed_control");
-    bedControl["bed_angle"] = b;
-    bedControl["bed_position"] = l;
-    bedControl["desk_position"] = t;
+    bedControl["bed_angle"] = map(l, 0, LEGREST_MAX, 0, 35);
+    bedControl["bed_position"] = map(b, 0, BACKREST_MAX ,0 ,80);
+    bedControl["desk_position"] = map(t, 0, TABLE_MAX, 0, 850);
     String result;
     serializeJson(doc, result);
     Serial.println(result); // 디버깅용

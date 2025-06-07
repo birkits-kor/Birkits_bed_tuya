@@ -72,5 +72,6 @@ void MainRoutine::do100msTasks()
         restartRoutine.checkRoutine();
         tuyaMQTTClient.connect();
         controlRoutine.updatePos();
+        controlRoutine.loopByApp();
     }
 }

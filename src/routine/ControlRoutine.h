@@ -20,7 +20,20 @@ enum class MotorWaitState
     WAIT_LEG_ORIGIN_FOR_TABLE_FORWARD,  // 테이블을 앞으로 밀기 위해 다리 원점을 기다리는 중
     WAIT_LEG_ORIGIN_FOR_TABLE_BACKWARD, // 테이블을 뒤로 밀기 위해 다리 원점을 기다리는 중
     WAIT_TABLE_ORIGIN_FOR_MODE,
-    WAIT_LEG_ORIGIN_FOR_MODE
+    WAIT_LEG_ORIGIN_FOR_MODE,
+    DONE_MODE
+};
+
+enum class ControlMode {
+    None,
+    IR,
+    App
+};
+
+struct BedData {
+    int bed_position = 0;
+    int bed_angle = 0;
+    int desk_position = 0;
 };
 
 class ControlRoutine
@@ -30,15 +43,18 @@ public:
     void begin();
     void updatePos();
     void loopByIr(IRCommand cmd);
+    void loopByApp();
     void loopLed();
+    static void setBedData(const BedData& data);
 
 private:
-    MotorWaitState state = MotorWaitState::NONE;
+    static MotorWaitState state;
     IRCommand preCmd = IRCommand::NONE;
+    static ControlMode controlMode;
+    static BedData bedData;
     bool ledState = false;
     int mode = 0;
     bool modeFlag = true;
-    void doMode(int n);
 
     unsigned long ledStartMillis = 0;
     bool ledFlag = false;
