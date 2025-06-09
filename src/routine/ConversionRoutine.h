@@ -18,6 +18,7 @@ private:
     void lightfunc(const String &payload);
     void bedfunc(const String &payload);
     void stopfunc(const String &payload);
+    void alarmfunc(const String &payload);
 
     String makeBedControlData(String topic);
     String makeLightControlData(String topic);

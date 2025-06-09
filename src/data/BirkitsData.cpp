@@ -42,10 +42,9 @@ BirkitsData &BirkitsData::getInstance()
 //     sw = lightControlData.light_switch;
 // }
 
-std::vector<ModeData> BirkitsData::getModeDataList() const
+std::vector<ModeData> BirkitsData::getModeDataList()
 {
-    std::vector<ModeData> modeList;
-
+    modeList.clear();
     String jsonStr = NVSStorage::getInstance().getCredential("mode_data");
 
     if (jsonStr.isEmpty())
@@ -83,62 +82,15 @@ std::vector<ModeData> BirkitsData::getModeDataList() const
     return modeList;
 }
 
-std::vector<AlarmData> BirkitsData::getAlarmDataList() const
+String BirkitsData::getAlarmDataList()
 {
-    std::vector<AlarmData> alarmList;
-
     String jsonStr = NVSStorage::getInstance().getCredential("alarm_data");
-
     if (jsonStr.isEmpty())
     {
-        return alarmList; // 빈 벡터 반환
+        return ""; // 빈 벡터 반환
     }
-
-    StaticJsonDocument<4096> doc; // 충분한 크기 확보, 알람 데이터가 좀 더 클 수 있으니 크게 잡음
-    DeserializationError err = deserializeJson(doc, jsonStr);
-
-    if (err)
-    {
-        return alarmList; // 파싱 실패 시 빈 벡터 반환
-    }
-
-    JsonArray array = doc.as<JsonArray>();
-
-    for (JsonObject obj : array)
-    {
-        AlarmData data;
-
-        JsonObject alarm = obj["data"]["alarm"];
-        JsonObject time = alarm["time"];
-        JsonObject bed = obj["data"]["bed"];
-
-        data.active = alarm["active"] | false;
-        data.time.hour = time["hour"] | 0;
-        data.time.minute = time["minute"] | 0;
-
-        // weekday 배열 파싱 (optional)
-        data.weekday.clear();
-        if (alarm.containsKey("weekday"))
-        {
-            JsonArray wdArr = alarm["weekday"].as<JsonArray>();
-            for (int wd : wdArr)
-            {
-                data.weekday.push_back(wd);
-            }
-        }
-
-        data.lower = bed["lower"] | 0;
-        data.table = bed["table"] | 0;
-        data.upper = bed["upper"] | 0;
-
-        data.id = obj["id"] | 0;
-        data.index = obj["index"] | 0;
-        data.title = String((const char*)obj["title"]);
-
-        alarmList.push_back(data);
-    }
-
-    return alarmList;
+    Serial.println(jsonStr);
+    return jsonStr;
 }
 
 void BirkitsData::setTimerData(unsigned long timestamp, int id, bool isActive)
@@ -163,4 +115,14 @@ void BirkitsData::setStartTime(unsigned long t)
 unsigned long BirkitsData::getCurrentTime()
 {
     return startTime + (millis() / 1000);
+}
+
+void BirkitsData::saveAlarmData(String data)
+{
+    String alarmDataStr = NVSStorage::getInstance().getCredential("alarm_data");
+    if (data == alarmDataStr)
+        return;
+
+    NVSStorage::getInstance().saveCredential("alarm_data", data);
+    getAlarmDataList();
 }

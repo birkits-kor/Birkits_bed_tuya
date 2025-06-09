@@ -45,12 +45,13 @@ class BirkitsData
 public:
     static BirkitsData &getInstance();
 
-    std::vector<ModeData> getModeDataList() const;
-    std::vector<AlarmData> getAlarmDataList() const;
+    std::vector<ModeData> getModeDataList();
+    String getAlarmDataList();
+    void saveAlarmData(String data);
+
     void setTimerData(unsigned long timestamp, int id, bool isActive);
     bool getTimerData(int &id, unsigned long &timestamp) const;
     unsigned long getCurrentTime();
-
     void setStartTime(unsigned long t);
 
 private:
@@ -60,6 +61,7 @@ private:
     unsigned long startTime;
     bool speaker_switch = false;
     TimerData timerData;
+    std::vector<ModeData> modeList;
 };
 
 #endif // BIRKITS_DATA_H

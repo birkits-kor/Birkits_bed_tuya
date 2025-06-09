@@ -22,6 +22,8 @@ void ConversionRoutine::begin()
                                            { this->bedfunc(payload); });
     jsonConversionHandler.registerCallback("stop", [this](const String &payload)
                                            { this->stopfunc(payload); });
+    jsonConversionHandler.registerCallback("alarm_data", [this](const String &payload)
+                                           { this->alarmfunc(payload); });
 }
 
 void ConversionRoutine::loop()
@@ -102,10 +104,25 @@ void ConversionRoutine::bedfunc(const String &payload)
 
 void ConversionRoutine::stopfunc(const String &payload)
 {
-    Serial.println("stopfunc");
     BackrestMotorController::getInstance()->stopMotor();
     LegrestMotorController::getInstance()->stopMotor();
     TableMotorController::getInstance()->stopMotor();
+}
+
+void ConversionRoutine::alarmfunc(const String &payload)
+{
+    StaticJsonDocument<2048> doc;
+    DeserializationError error = deserializeJson(doc, payload);
+    if (error)
+    {
+        Serial.print(F("lightfunc() failed: "));
+        Serial.println(error.f_str());
+        return;
+    }
+    JsonArray alarmArray = doc["alarm_data"];
+    String output;
+    serializeJson(alarmArray, output);
+    BirkitsData::getInstance().saveAlarmData(output);
 }
 
 String ConversionRoutine::makeBedControlData(String topic)
@@ -208,47 +225,28 @@ String ConversionRoutine::makeModeData(String topic)
 
 String ConversionRoutine::makeAlarmData(String topic)
 {
-    auto alarmList = BirkitsData::getInstance().getAlarmDataList();
-
-    StaticJsonDocument<2048> doc;
-    JsonObject root = doc.createNestedObject("data");
-
-    root["topic"] = topic;
-    JsonArray alarmArray = root.createNestedArray("alarm_data");
-
-    for (const AlarmData &a : alarmList)
+    String alarmListStr = BirkitsData::getInstance().getAlarmDataList();
+    StaticJsonDocument<4096> doc;
+    JsonObject outer = doc.to<JsonObject>();
+    JsonArray alarmArray = outer.createNestedArray("alarm_data");
+    outer["topic"] = topic;
+    StaticJsonDocument<4096> alarmDoc;
+    DeserializationError error = deserializeJson(alarmDoc, alarmListStr);
+    if (error)
     {
-        JsonObject alarmObj = alarmArray.createNestedObject();
-        JsonObject dataObj = alarmObj.createNestedObject("data");
+        Serial.print(F("Failed to parse alarm list: "));
+        Serial.println(error.f_str());
+        return "{}";
+    }
 
-        // alarm 객체
-        JsonObject alarm = dataObj.createNestedObject("alarm");
-        alarm["active"] = a.active;
-        JsonObject time = alarm.createNestedObject("time");
-        time["hour"] = a.time.hour;
-        time["minute"] = a.time.minute;
-
-        // weekday 배열
-        JsonArray weekdayArray = alarm.createNestedArray("weekday");
-        for (int d : a.weekday)
-        {
-            weekdayArray.add(d);
-        }
-
-        // bed 객체
-        JsonObject bed = dataObj.createNestedObject("bed");
-        bed["lower"] = a.lower;
-        bed["table"] = a.table;
-        bed["upper"] = a.upper;
-
-        // 기타 정보
-        alarmObj["id"] = a.id;
-        alarmObj["index"] = a.index;
-        alarmObj["title"] = a.title;
+    JsonArray parsedAlarmArray = alarmDoc.as<JsonArray>();
+    for (JsonObject alarmItem : parsedAlarmArray)
+    {
+        alarmArray.add(alarmItem);
     }
 
     String result;
-    serializeJson(doc, result);
+    serializeJson(outer, result);
     Serial.println(result); // 디버깅용
     return result;
 }
