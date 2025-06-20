@@ -272,7 +272,7 @@ void ControlRoutine::loopByApp()
         return;
     }
 
-     if (state == MotorWaitState::WAIT_LEG_ORIGIN_FOR_MODE && LegrestMotorController::getInstance()->getPosition() < 30)
+    if (state == MotorWaitState::WAIT_LEG_ORIGIN_FOR_MODE && LegrestMotorController::getInstance()->getPosition() < 30)
     {
         BackrestMotorController::getInstance()->moveTo(bedData.bed_position);
         LegrestMotorController::getInstance()->moveTo(bedData.bed_angle);
@@ -331,6 +331,92 @@ void ControlRoutine::loopLed()
         {
             ledFlag = false; // 5초 경과 시 종료
             LedController::getInstance()->stop();
+        }
+    }
+}
+
+void ControlRoutine::loopAlram()
+{
+    std::vector<AlarmData> alarms;
+    auto data = BirkitsData::getInstance().getAlarmDataList();
+    DynamicJsonDocument doc(4096);
+    DeserializationError error = deserializeJson(doc, data);
+    if (error)
+        return;
+
+    JsonArray arr = doc.as<JsonArray>();
+
+    for (JsonObject obj : arr)
+    {
+        AlarmData alarmData;
+
+        JsonObject data = obj["data"];
+        JsonObject alarm = data["alarm"];
+        JsonObject time = alarm["time"];
+        JsonObject bed = data["bed"];
+
+        // 기본 데이터
+        alarmData.id = obj["id"].as<int>();
+        alarmData.index = obj["index"].as<int>();
+        alarmData.title = String(obj["title"].as<const char *>());
+
+        // Alarm
+        alarmData.active = alarm["active"].as<bool>();
+        alarmData.time.hour = time["hour"].as<int>();
+        alarmData.time.minute = time["minute"].as<int>();
+
+        // weekday (std::vector로 옮기기)
+        for (int weekday : alarm["weekday"].as<JsonArray>())
+        {
+            alarmData.weekday.push_back(weekday);
+        }
+
+        // Bed
+        alarmData.lower = bed["lower"].as<int>();
+        alarmData.table = bed["table"].as<int>();
+        alarmData.upper = bed["upper"].as<int>();
+
+        alarms.push_back(alarmData);
+    }
+
+    int nowYear, nowMonth, nowDay, nowHour, nowMinute, nowSecond, nowWeekday;
+    TimeManager::getInstance().getDateTime(nowYear, nowMonth, nowDay, nowHour, nowMinute, nowSecond, nowWeekday);
+    Serial.printf("현재 시각: %04d-%02d-%02d %02d:%02d:%02d (weekday=%d)\n",
+                  nowYear, nowMonth, nowDay, nowHour, nowMinute, nowSecond, nowWeekday);
+    // 결과 출력
+    for (const AlarmData &a : alarms)
+    {
+        bool weekdayMatch = false;
+        for (int w : a.weekday)
+        {
+            if (w == nowWeekday)
+            {
+                weekdayMatch = true;
+                break;
+            }
+        }
+        bool timeMatch = (a.time.hour == nowHour && a.time.minute == nowMinute);
+        bool isTriggered = a.active && weekdayMatch && timeMatch;
+
+        if (isTriggered)
+        {
+            Serial.printf("Alram on [ID:%d Title:%s]\n", a.id, a.title);
+            BedData bed;
+            bed.bed_angle = a.upper;
+            bed.bed_position = a.lower;
+            bed.desk_position = a.table;
+            setBedData(bed);
+            StaticJsonDocument<256> doc;
+
+            JsonObject data = doc.createNestedObject("data");
+            data["topic"] = "alarm_control";
+
+            JsonObject alarm_control = data.createNestedObject("alarm_control");
+            alarm_control["id"] = a.id;
+            alarm_control["state"] = "done";
+            String jsonStr;
+            serializeJson(doc, jsonStr);
+            TxMessageQueue::getInstance().push(jsonStr);
         }
     }
 }

@@ -53,7 +53,7 @@ std::vector<ModeData> BirkitsData::getModeDataList()
         return modeList;
     }
 
-    StaticJsonDocument<2048> doc; // 충분한 크기 확보
+    StaticJsonDocument<4096> doc; // 충분한 크기 확보
     DeserializationError err = deserializeJson(doc, jsonStr);
 
     if (err)
@@ -82,14 +82,14 @@ std::vector<ModeData> BirkitsData::getModeDataList()
     return modeList;
 }
 
-String BirkitsData::getAlarmDataList()
+String BirkitsData::    getAlarmDataList()
 {
     String jsonStr = NVSStorage::getInstance().getCredential("alarm_data");
     if (jsonStr.isEmpty())
     {
         return ""; // 빈 벡터 반환
     }
-    Serial.println(jsonStr);
+    // Serial.println(jsonStr);
     return jsonStr;
 }
 

@@ -11,6 +11,8 @@
 #include "../led/PirSensor.h"
 #include "../communication/IRDecoder.h"
 #include "../communication/TimeManager.h"
+#include "../data/BirkitsData.h"
+#include "../data/TxMessageQueue.h"
 
 enum class MotorWaitState
 {
@@ -45,6 +47,7 @@ public:
     void loopByIr(IRCommand cmd);
     void loopByApp();
     void loopLed();
+    void loopAlram();
     static void setBedData(const BedData& data);
 
 private:

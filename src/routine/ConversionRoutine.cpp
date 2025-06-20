@@ -111,7 +111,7 @@ void ConversionRoutine::stopfunc(const String &payload)
 
 void ConversionRoutine::alarmfunc(const String &payload)
 {
-    StaticJsonDocument<2048> doc;
+    StaticJsonDocument<4096> doc;
     DeserializationError error = deserializeJson(doc, payload);
     if (error)
     {

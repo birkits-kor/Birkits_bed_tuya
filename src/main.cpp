@@ -17,6 +17,7 @@ void loop()
     mainRoutine.do10msTasks();
     mainRoutine.do50msTasks();
     mainRoutine.do100msTasks();
+    mainRoutine.do1mTasks();
     delay(1);
 }
 

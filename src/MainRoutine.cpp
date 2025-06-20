@@ -62,7 +62,6 @@ void MainRoutine::do50msTasks()
     }
 }
 
-
 void MainRoutine::do100msTasks()
 {
     unsigned long now = millis();
@@ -73,5 +72,15 @@ void MainRoutine::do100msTasks()
         tuyaMQTTClient.connect();
         controlRoutine.updatePos();
         controlRoutine.loopByApp();
+    }
+}
+
+void MainRoutine::do1mTasks()
+{
+    unsigned long now = millis();
+    if (now - prev1m >= 60 * 1000)
+    {
+        prev1m = now;
+        controlRoutine.loopAlram();
     }
 }
