@@ -82,5 +82,6 @@ void MainRoutine::do1mTasks()
     {
         prev1m = now;
         controlRoutine.loopAlram();
+        controlRoutine.loopSnooze();
     }
 }

@@ -3,6 +3,7 @@
 ControlMode ControlRoutine::controlMode = ControlMode::None;
 MotorWaitState ControlRoutine::state = MotorWaitState::NONE;
 BedData ControlRoutine::bedData;
+SnoozeData ControlRoutine::snoozeData;
 
 ControlRoutine::ControlRoutine()
 {
@@ -421,6 +422,33 @@ void ControlRoutine::loopAlram()
     }
 }
 
+void ControlRoutine::loopSnooze()
+{
+    int h, m;
+    TimeManager::getInstance().getHourMinute(h, m);
+    if (snoozeData.flag && snoozeData.hours == h && snoozeData.minutes == m)
+    {
+        snoozeData.flag = false;
+        Serial.printf("Snooze on [ID:%d]\n", snoozeData.id);
+        BedData bed;
+        bed.bed_angle = snoozeData.bed_upper;
+        bed.bed_position = snoozeData.bed_lower;
+        bed.desk_position = snoozeData.bed_table;
+        setBedData(bed);
+        StaticJsonDocument<256> doc;
+
+        JsonObject data = doc.createNestedObject("data");
+        data["topic"] = "alarm_control";
+
+        JsonObject alarm_control = data.createNestedObject("alarm_control");
+        alarm_control["id"] = snoozeData.id;
+        alarm_control["state"] = "done";
+        String jsonStr;
+        serializeJson(doc, jsonStr);
+        TxMessageQueue::getInstance().push(jsonStr);
+    }
+}
+
 void ControlRoutine::setBedData(const BedData &data)
 {
     // 데이터 변경 시 일시 정지 후 데이터 처리리
@@ -431,4 +459,26 @@ void ControlRoutine::setBedData(const BedData &data)
     TableMotorController::getInstance()->stopMotor();
     state = MotorWaitState::NONE;
     Serial.printf("%d %d %d\n", bedData.bed_angle, bedData.bed_position, bedData.desk_position);
+}
+void ControlRoutine::setSnooze(int min, int l, int t, int u, int id)
+{
+    snoozeData.flag = true;
+    snoozeData.bed_lower = l;
+    snoozeData.bed_table = t;
+    snoozeData.bed_upper = u;
+    snoozeData.id = id;
+
+    int h, m;
+    TimeManager::getInstance().getHourMinute(h, m);
+    m += min;
+    if (m >= 60)
+    {
+        h++;
+        min -= 60;
+    }
+    if (h == 24)
+        h = 0;
+
+    snoozeData.hours = h;
+    snoozeData.minutes = m;
 }

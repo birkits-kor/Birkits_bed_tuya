@@ -24,6 +24,8 @@ void ConversionRoutine::begin()
                                            { this->stopfunc(payload); });
     jsonConversionHandler.registerCallback("alarm_data", [this](const String &payload)
                                            { this->alarmfunc(payload); });
+    jsonConversionHandler.registerCallback("alarm_control", [this](const String &payload)
+                                           { this->alarmControlfunc(payload); });
 }
 
 void ConversionRoutine::loop()
@@ -111,6 +113,7 @@ void ConversionRoutine::stopfunc(const String &payload)
 
 void ConversionRoutine::alarmfunc(const String &payload)
 {
+    Serial.println(payload);
     StaticJsonDocument<4096> doc;
     DeserializationError error = deserializeJson(doc, payload);
     if (error)
@@ -123,6 +126,32 @@ void ConversionRoutine::alarmfunc(const String &payload)
     String output;
     serializeJson(alarmArray, output);
     BirkitsData::getInstance().saveAlarmData(output);
+}
+
+void ConversionRoutine::alarmControlfunc(const String &payload)
+{
+    StaticJsonDocument<512> doc;
+    DeserializationError err = deserializeJson(doc, payload);
+    if (err)
+    {
+        Serial.print("JSON 파싱 실패: ");
+        Serial.println(err.c_str());
+        return;
+    }
+
+    JsonObject alarmCtrl = doc["alarm_control"];
+    int waitMinutes = alarmCtrl["wait_minutes"] | 0;
+    int id = alarmCtrl["id"] | 0;
+
+    JsonObject bed = alarmCtrl["bed"];
+    int lower = bed["lower"] | 0;
+    int table = bed["table"] | 0;
+    int upper = bed["upper"] | 0;
+
+
+    Serial.printf("[%d] wait_minutes: %d\n",id, waitMinutes);
+    Serial.printf("bed → lower: %d, table: %d, upper: %d\n", lower, table, upper);
+    ControlRoutine::setSnooze(waitMinutes, lower, table, upper, id);
 }
 
 String ConversionRoutine::makeBedControlData(String topic)

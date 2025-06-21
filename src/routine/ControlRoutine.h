@@ -38,6 +38,16 @@ struct BedData {
     int desk_position = 0;
 };
 
+struct SnoozeData {
+    bool flag = false;
+    int minutes;
+    int hours;   // 스누즈 대기 시간
+    int bed_lower;      // 침대 하부 위치
+    int bed_table;      // 테이블 위치
+    int bed_upper;      // 침대 상부 위치
+    int id;
+};
+
 class ControlRoutine
 {
 public:
@@ -48,6 +58,8 @@ public:
     void loopByApp();
     void loopLed();
     void loopAlram();
+    void loopSnooze();
+    static void setSnooze(int min, int l, int t, int u, int id);
     static void setBedData(const BedData& data);
 
 private:
@@ -55,6 +67,7 @@ private:
     IRCommand preCmd = IRCommand::NONE;
     static ControlMode controlMode;
     static BedData bedData;
+    static SnoozeData snoozeData;
     bool ledState = false;
     int mode = 0;
     bool modeFlag = true;
