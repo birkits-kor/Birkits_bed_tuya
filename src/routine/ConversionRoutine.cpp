@@ -26,6 +26,8 @@ void ConversionRoutine::begin()
                                            { this->alarmfunc(payload); });
     jsonConversionHandler.registerCallback("alarm_control", [this](const String &payload)
                                            { this->alarmControlfunc(payload); });
+    jsonConversionHandler.registerCallback("mode_data", [this](const String &payload)
+                                           { this->modefunc(payload); });
 }
 
 void ConversionRoutine::loop()
@@ -154,6 +156,27 @@ void ConversionRoutine::alarmControlfunc(const String &payload)
     ControlRoutine::setSnooze(waitMinutes, lower, table, upper, id);
 }
 
+void ConversionRoutine::modefunc(const String &payload)
+{
+    StaticJsonDocument<4096> doc;
+    DeserializationError err = deserializeJson(doc, payload);
+    if (err)
+    {
+        Serial.println("JSON 파싱 오류");
+        return ;
+    }
+
+    JsonArray modeArray = doc["data"]["mode_data"];
+    if (!modeArray)
+    {
+        Serial.println("mode_data 없음");
+        return ;
+    }
+
+    String output;
+    serializeJson(modeArray, output);
+}
+
 String ConversionRoutine::makeBedControlData(String topic)
 {
     auto b = BackrestMotorController::getInstance()->getPosition();
@@ -226,7 +249,7 @@ String ConversionRoutine::makeModeData(String topic)
 {
     auto dataList = BirkitsData::getInstance().getModeDataList();
 
-    StaticJsonDocument<2048> doc;
+    StaticJsonDocument<4096> doc;
     JsonObject root = doc.createNestedObject("data");
 
     root["topic"] = topic;

@@ -3,7 +3,6 @@
 
 BirkitsData::BirkitsData()
 {
-   
 }
 
 BirkitsData &BirkitsData::getInstance()
@@ -46,7 +45,6 @@ std::vector<ModeData> BirkitsData::getModeDataList()
 {
     modeList.clear();
     String jsonStr = NVSStorage::getInstance().getCredential("mode_data");
-
     if (jsonStr.isEmpty())
     {
         // 비어있으면 빈 벡터 리턴
@@ -82,7 +80,7 @@ std::vector<ModeData> BirkitsData::getModeDataList()
     return modeList;
 }
 
-String BirkitsData::    getAlarmDataList()
+String BirkitsData::getAlarmDataList()
 {
     String jsonStr = NVSStorage::getInstance().getCredential("alarm_data");
     if (jsonStr.isEmpty())
@@ -125,4 +123,13 @@ void BirkitsData::saveAlarmData(String data)
 
     NVSStorage::getInstance().saveCredential("alarm_data", data);
     getAlarmDataList();
+}
+
+void BirkitsData::saveModeData(String data)
+{
+    String alarmDataStr = NVSStorage::getInstance().getCredential("mode_data");
+    if (data == alarmDataStr)
+        return;
+
+    NVSStorage::getInstance().saveCredential("mode_data", data);
 }

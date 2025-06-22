@@ -20,6 +20,7 @@ private:
     void stopfunc(const String &payload);
     void alarmfunc(const String &payload);
     void alarmControlfunc(const String &payload);
+    void modefunc(const String &payload);
 
     String makeBedControlData(String topic);
     String makeLightControlData(String topic);
