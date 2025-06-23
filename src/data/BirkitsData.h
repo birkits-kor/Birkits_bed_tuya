@@ -46,6 +46,7 @@ public:
     static BirkitsData &getInstance();
 
     std::vector<ModeData> getModeDataList();
+    void saveModeData(String data);
     String getAlarmDataList();
     void saveAlarmData(String data);
 

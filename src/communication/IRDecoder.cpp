@@ -48,13 +48,13 @@ IRCommand IRDecoder::decode(uint16_t raw)
     case 0x70:
         return IRCommand::STOP;
     case 0x64:
-        return IRCommand::BACKREST_UP;
-    case 0x23:
-        return IRCommand::BACKREST_DOWN;
-    case 0x6F:
         return IRCommand::LEG_UP;
-    case 0x26:
+    case 0x23:
         return IRCommand::LEG_DOWN;
+    case 0x6F:
+        return IRCommand::BACKREST_UP;
+    case 0x26:
+        return IRCommand::BACKREST_DOWN;
     case 0x20:
         return IRCommand::TABLE_FORWARD;
     case 0x21:
