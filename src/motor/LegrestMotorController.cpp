@@ -1,12 +1,11 @@
 #include "LegrestMotorController.h"
 
 LegrestMotorController *LegrestMotorController::instance = nullptr;
-volatile bool LegrestMotorController::_ischange = false;
-volatile int LegrestMotorController::_pulseCount = 0;
-bool LegrestMotorController::_enabled = false;
 MotorState LegrestMotorController::_state = MOTOR_STOPPED;
 volatile uint16_t LegrestMotorController::_position = 0;
 uint16_t LegrestMotorController::_targetPosition = UINT16_MAX;
+uint16_t LegrestMotorController::_travelTime = 0;
+unsigned long LegrestMotorController::_isrTime = 0;
 String LegrestMotorController::_name = "leg_pos";
 
 LegrestMotorController *LegrestMotorController::getInstance()
@@ -18,24 +17,12 @@ LegrestMotorController *LegrestMotorController::getInstance()
 
 void LegrestMotorController::legrestISR()
 {
-    if (!_enabled)
-        _pulseCount++;
-
-    if (_state == MOTOR_MOVING_FORWARD && _position < LEGREST_MAX)
-        _position++; // 전진 중일 때 포지션 증가
-    else if (_state == MOTOR_MOVING_BACKWARD && _position > 0)
-        _position--; // 후진 중일 때 포지션 감소
-
-    if (_enabled && (_position == 0 || _position == LEGREST_MAX || _position == _targetPosition))
-    {
-        _ischange = true;
-    }
+    _isrTime = millis();
 }
 
 void LegrestMotorController::setupMotor()
 {
     begin();
-    _enabled = false;
     attachInterrupt(digitalPinToInterrupt(_hallPin), legrestISR, RISING);
     String val = NVSStorage::getInstance().getCredential(_name);
 
@@ -44,40 +31,28 @@ void LegrestMotorController::setupMotor()
         _position = 0;
         NVSStorage::getInstance().saveCredential(_name, "0");
     }
-
-    _pulseCount = 0;
-    moveForward();
-    delay(100); // 0.1초 전진
-    stopMotor();
-    delay(10);
-
-    moveBackward();
-    delay(100); // 0.1초 후진
-    stopMotor();
-
-    if (_pulseCount != 0)
-    {
-        _enabled = true;
-        Serial.printf("LegrestMotor enable pos[%d]!!\n", _position);
-        return;
-    }
     else
-        Serial.printf("LegrestMotor disable!!\n");
+        _position = static_cast<uint16_t>(val.toInt());
+    Serial.printf("LegrestMotor set[%d]!!\n", _position);
 }
 
 void LegrestMotorController::moveTo(uint16_t targetPosition)
 {
-    if (!_enabled)
-        return;
-    _targetPosition = targetPosition;
+     _targetPosition = targetPosition;
+    _travelTime = abs(_position - _targetPosition);
+    if (_targetPosition == 0 || _targetPosition == LEGREST_MAX)
+        _travelTime = LEGREST_MAX;
+
     if (_position < _targetPosition || _targetPosition >= LEGREST_MAX)
     {
         _startTime = millis();
+        _isrTime = millis();
         moveForward();
     }
     else if (_position > _targetPosition || _targetPosition == 0)
     {
         _startTime = millis();
+        _isrTime = millis();
         moveBackward();
     }
     else
@@ -86,27 +61,19 @@ void LegrestMotorController::moveTo(uint16_t targetPosition)
 
 void LegrestMotorController::updatePos()
 {
-    if (!_enabled)
+    if (_state == MOTOR_STOPPED)
         return;
-
-    if (_ischange)
+    if (millis() - _startTime >= _travelTime || millis() - _isrTime > 300) // 정해진 시간만큼 작동 함 or isr 최종 작동 시간 300ms 초과
     {
+        if (millis() - _isrTime < 100 && (_position == 0 || _position == LEGREST_MAX)) // 끝점 보정 작업 위해 추가 5초 이동
+        {
+            _startTime = millis();
+            _travelTime = 5000;
+            return;
+        }
+        _position = _targetPosition;
+        stop();
         Serial.printf("LegrestMotor move done[%d]!!\n", _position);
-        if (_position == 0 || _position == LEGREST_MAX)
-            delay(1000);
-        stopMotor();
-        _ischange = false;
-        NVSStorage::getInstance().saveCredential(_name, String((_position / 10) * 10));
-    }
-
-    // 끝점 값 추가 보정
-    if (_state != MOTOR_STOPPED && millis() > _startTime + 30 * 1000)
-    {
-        _ischange = true;
-        if (_state == MOTOR_MOVING_FORWARD)
-            _position = LEGREST_MAX;
-        else if (_state == MOTOR_MOVING_BACKWARD)
-            _position = 0;
     }
 }
 
@@ -115,29 +82,29 @@ int LegrestMotorController::getPosition()
     return map(0, 80, 0, LEGREST_MAX, _position);
 }
 
-void LegrestMotorController::moveUp(uint16_t n)
-{
-    if (!_enabled)
-        return;
-    if (_position + n >= LEGREST_MAX)
-        _targetPosition = LEGREST_MAX;
-    else
-        _targetPosition = _position + n;
-    _startTime = millis() - (20 * 1000);
-    moveForward();
-}
+// void LegrestMotorController::moveUp(uint16_t n)
+// {
+//     if (!_enabled)
+//         return;
+//     if (_position + n >= LEGREST_MAX)
+//         _targetPosition = LEGREST_MAX;
+//     else
+//         _targetPosition = _position + n;
+//     _startTime = millis() - (20 * 1000);
+//     moveForward();
+// }
 
-void LegrestMotorController::moveDown(uint16_t n)
-{
-    if (!_enabled)
-        return;
-    if (_position <= n)
-        _targetPosition = 0;
-    else
-        _targetPosition = _position - n;
-    _startTime = millis() - (20 * 1000);
-    moveBackward();
-}
+// void LegrestMotorController::moveDown(uint16_t n)
+// {
+//     if (!_enabled)
+//         return;
+//     if (_position <= n)
+//         _targetPosition = 0;
+//     else
+//         _targetPosition = _position - n;
+//     _startTime = millis() - (20 * 1000);
+//     moveBackward();
+// }
 
 void LegrestMotorController::moveForward()
 {
@@ -155,8 +122,24 @@ void LegrestMotorController::moveBackward()
 
 void LegrestMotorController::stopMotor()
 {
+    if (_state == MOTOR_STOPPED)
+        return;
+    if (_state == MOTOR_MOVING_FORWARD && _position + (millis() - _startTime) >= LEGREST_MAX)
+        _position = LEGREST_MAX;
+    else if (_state == MOTOR_MOVING_BACKWARD && _position + (millis() - _startTime) <= 0)
+        _position = 0;
+    else if (_state == MOTOR_MOVING_FORWARD)
+        _position += (millis() - _startTime);
+    else if (_state == MOTOR_MOVING_BACKWARD)
+        _position -= (millis() - _startTime);
+    stop();
+    Serial.printf("LegrestMotor move stop[%d]!!\n", _position);
+}
+
+void LegrestMotorController::stop()
+{
+    _state = MOTOR_STOPPED;
     digitalWrite(_pin1, LOW);
     digitalWrite(_pin2, LOW);
-    _state = MOTOR_STOPPED;
-    _ischange = true;
+    NVSStorage::getInstance().saveCredential(_name, String((_position / 100) * 100));
 }

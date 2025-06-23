@@ -124,8 +124,6 @@ void BackrestMotorController::stopMotor()
 {
     if (_state == MOTOR_STOPPED)
         return;
-    Serial.println(millis() - _startTime);
-    Serial.println(_position);
     if (_state == MOTOR_MOVING_FORWARD && _position + (millis() - _startTime) >= BACKREST_MAX)
         _position = BACKREST_MAX;
     else if (_state == MOTOR_MOVING_BACKWARD && _position + (millis() - _startTime) <= 0)
