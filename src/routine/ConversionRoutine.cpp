@@ -175,6 +175,7 @@ void ConversionRoutine::modefunc(const String &payload)
 
     String output;
     serializeJson(modeArray, output);
+    BirkitsData::getInstance().saveModeData(output);
 }
 
 String ConversionRoutine::makeBedControlData(String topic)
