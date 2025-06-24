@@ -59,6 +59,7 @@ void MainRoutine::do50msTasks()
     {
         prev50ms = now;
         controlRoutine.loopLed();
+        controlRoutine.updatePos();
     }
 }
 
@@ -70,7 +71,6 @@ void MainRoutine::do100msTasks()
         prev100ms = now;
         restartRoutine.checkRoutine();
         tuyaMQTTClient.connect();
-        controlRoutine.updatePos();
         controlRoutine.loopByApp();
     }
 }

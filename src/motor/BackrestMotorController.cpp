@@ -63,9 +63,9 @@ void BackrestMotorController::updatePos()
 {
     if (_state == MOTOR_STOPPED)
         return;
-    if (millis() - _startTime >= _travelTime || millis() - _isrTime > 100) // 정해진 시간만큼 작동 함 or isr 최종 작동 시간 300ms 초과
+    if (millis() - _startTime >= _travelTime || millis() - _isrTime > 50) // 정해진 시간만큼 작동 함 or isr 최종 작동 시간 300ms 초과
     {
-        if (millis() - _isrTime < 100 && (_targetPosition == 0 || _targetPosition == BACKREST_MAX)) // 끝점 보정 작업 위해 추가 5초 이동
+        if (millis() - _isrTime < 50 && (_targetPosition == 0 || _targetPosition == BACKREST_MAX)) // 끝점 보정 작업 위해 추가 5초 이동
         {
             _startTime = millis();
             _travelTime = 5000;
