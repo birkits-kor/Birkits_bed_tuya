@@ -39,6 +39,8 @@ void TableMotorController::setupMotor()
 void TableMotorController::moveTo(uint16_t targetPosition)
 {
     _targetPosition = targetPosition;
+    if (_targetPosition == _position)
+        return;
     _travelTime = abs(_position - _targetPosition);
     if (_targetPosition == 0 || _targetPosition == TABLE_MAX)
         _travelTime = TABLE_MAX;

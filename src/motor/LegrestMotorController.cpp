@@ -38,7 +38,9 @@ void LegrestMotorController::setupMotor()
 
 void LegrestMotorController::moveTo(uint16_t targetPosition)
 {
-     _targetPosition = targetPosition;
+    _targetPosition = targetPosition;
+    if (_targetPosition == _position)
+        return;
     _travelTime = abs(_position - _targetPosition);
     if (_targetPosition == 0 || _targetPosition == LEGREST_MAX)
         _travelTime = LEGREST_MAX;

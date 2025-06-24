@@ -39,6 +39,8 @@ void BackrestMotorController::setupMotor()
 void BackrestMotorController::moveTo(uint16_t targetPosition)
 {
     _targetPosition = targetPosition;
+    if(_targetPosition == _position)
+        return;
     _travelTime = abs(_position - _targetPosition);
     if (_targetPosition == 0 || _targetPosition == BACKREST_MAX)
         _travelTime = BACKREST_MAX;
