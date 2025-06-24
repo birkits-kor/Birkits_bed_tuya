@@ -2,7 +2,7 @@
 #define RESTARTROUTINE_H
 
 #include <Arduino.h>
-
+#define LED_BUILTIN 2
 class RestartRoutine
 {
 public:

@@ -23,6 +23,13 @@ void RestartRoutine::checkRoutine()
             if (millis() - _lowStartTime >= _thresholdMillis)
             {
                 Serial.println("EEPROM data will be erased. Performing factory reset...");
+                for(int i=0; i<10; i++)
+                {
+                    digitalWrite(LED_BUILTIN, LOW);
+                    delay(100);
+                    digitalWrite(LED_BUILTIN, HIGH);
+                    delay(100);
+                }
                 NVSStorage::getInstance().reset(); // Erase EEPROM
                 delay(100);             // Ensure EEPROM is flushed
                 ESP.restart();          // Restart device

@@ -4,6 +4,8 @@
 void MainRoutine::init()
 {
     Serial.begin(115200);
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
     NVSStorage::getInstance().begin(); // 초기화 필수
     Serial.println("Birkits Bed start!!");
     configPortal.begin();
@@ -26,6 +28,8 @@ void MainRoutine::init()
     }
 
     Serial.printf("setup done wifiManager[%d] timeManager[%d] tuyaMQTTClient[%d]\n", wifiManager_result, timeManager_result, tuyaMQTTClient_result);
+    if (wifiManager_result && timeManager_result && tuyaMQTTClient_result)
+        digitalWrite(LED_BUILTIN, HIGH);
     controlRoutine.begin();
     conversionRoutine.begin();
     irDecoder.setup();
@@ -70,7 +74,10 @@ void MainRoutine::do100msTasks()
     {
         prev100ms = now;
         restartRoutine.checkRoutine();
-        tuyaMQTTClient.connect();
+        if(tuyaMQTTClient.connect())
+            digitalWrite(LED_BUILTIN, HIGH);
+        else
+            digitalWrite(LED_BUILTIN, LOW);
         controlRoutine.loopByApp();
     }
 }
