@@ -27,6 +27,26 @@ void ControlRoutine::updatePos()
     BackrestMotorController::getInstance()->updatePos();
     LegrestMotorController::getInstance()->updatePos();
     TableMotorController::getInstance()->updatePos();
+    auto b = BackrestMotorController::getInstance()->getPosition();
+    auto l = LegrestMotorController::getInstance()->getPosition();
+    auto t = TableMotorController::getInstance()->getPosition();
+
+    if (_b != b || _l != l || _t != t)
+    {
+        _b = b;
+        _l = l;
+        _t = t;
+        StaticJsonDocument<256> doc;
+        JsonObject data = doc.createNestedObject("data");
+        data["topic"] = "bed_control";
+        JsonObject bedControl = data.createNestedObject("bed_control");
+        bedControl["bed_angle"] = map(l, 0, LEGREST_MAX, 0, 35);
+        bedControl["bed_position"] = map(b, 0, BACKREST_MAX, 0, 80);
+        bedControl["desk_position"] = map(t, 0, TABLE_MAX, 0, 850);
+        String result;
+        serializeJson(doc, result);
+        TxMessageQueue::getInstance().push(result);
+    }
 }
 
 void ControlRoutine::loopByIr(IRCommand cmd)

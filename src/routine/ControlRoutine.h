@@ -74,6 +74,8 @@ private:
 
     unsigned long ledStartMillis = 0;
     bool ledFlag = false;
+
+    int _b, _l, _t;
 };
 
 #endif
