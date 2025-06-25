@@ -228,26 +228,32 @@ void ControlRoutine::loopByIr(IRCommand cmd)
 
     case IRCommand::POSE1:
         mode = 1;
+        modeFlag = true;
         break;
 
     case IRCommand::POSE2:
         mode = 2;
+        modeFlag = true;
         break;
 
     case IRCommand::POSE3:
         mode = 3;
+        modeFlag = true;
         break;
 
     case IRCommand::POSE4:
         mode = 4;
+        modeFlag = true;
         break;
 
     case IRCommand::POSE5:
         mode = 5;
+        modeFlag = true;
         break;
 
     case IRCommand::POSE6:
         mode = 6;
+        modeFlag = true;
         break;
 
     case IRCommand::SPEAKER:
@@ -273,9 +279,23 @@ void ControlRoutine::loopByIr(IRCommand cmd)
         break;
     }
 
-    // 원점 설정 여부에 따라 로직 구현 다름름
+    // 원점 설정 여부에 따라 로직 구현 다름
     if (mode && modeFlag)
     {
+        modeFlag = false;
+        auto modelist = BirkitsData::getInstance().getModeDataList();
+        for (size_t i = 0; i < modelist.size(); ++i)
+        {
+            ModeData &m = modelist[i];
+            if(m.index == mode)
+            {
+                BedData bed;
+                bed.bed_angle = map(m.lower, 0, 35 ,0 ,LEGREST_MAX);
+                bed.bed_position = map(m.upper, 0, 80 ,0 ,BACKREST_MAX);
+                bed.desk_position = map(m.table, 0, 850 ,0 ,TABLE_MAX);
+                setBedData(bed);
+            }
+        }
     }
 }
 

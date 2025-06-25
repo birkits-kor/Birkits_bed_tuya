@@ -3,6 +3,7 @@
 
 BirkitsData::BirkitsData()
 {
+    updateModeDataList();
 }
 
 BirkitsData &BirkitsData::getInstance()
@@ -43,12 +44,17 @@ BirkitsData &BirkitsData::getInstance()
 
 std::vector<ModeData> BirkitsData::getModeDataList()
 {
+    return modeList;
+}
+
+void BirkitsData::updateModeDataList()
+{
     modeList.clear();
     String jsonStr = NVSStorage::getInstance().getCredential("mode_data");
     if (jsonStr.isEmpty())
     {
         // 비어있으면 빈 벡터 리턴
-        return modeList;
+        return;
     }
 
     StaticJsonDocument<4096> doc; // 충분한 크기 확보
@@ -57,7 +63,7 @@ std::vector<ModeData> BirkitsData::getModeDataList()
     if (err)
     {
         // 파싱 실패 시 빈 벡터 리턴
-        return modeList;
+        return;
     }
 
     JsonArray array = doc.as<JsonArray>();
@@ -76,8 +82,6 @@ std::vector<ModeData> BirkitsData::getModeDataList()
 
         modeList.push_back(data);
     }
-
-    return modeList;
 }
 
 String BirkitsData::getAlarmDataList()

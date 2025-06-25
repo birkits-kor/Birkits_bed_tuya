@@ -70,10 +70,9 @@ private:
     static SnoozeData snoozeData;
     bool ledState = false;
     int mode = 0;
-    bool modeFlag = true;
-
     unsigned long ledStartMillis = 0;
     bool ledFlag = false;
+    bool modeFlag = false;
 
     int _b, _l, _t;
 };
