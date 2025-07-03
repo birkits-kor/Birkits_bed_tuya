@@ -51,7 +51,7 @@ bool TuyaMQTTClient::connect()
 
   Serial.printf("TuyaMQTTClient id:%s pw:%s\n", device_id.c_str(), device_secret.c_str());
   client->setCACert(ca_cert);
-  const int maxAttempts = 10;
+  const int maxAttempts = 1;
   for (int attempt = 1; attempt <= maxAttempts; ++attempt)
   {
     if (!mqttClient.connected())
@@ -74,7 +74,7 @@ bool TuyaMQTTClient::connect()
       {
         Serial.print("Failed to connect to MQTT broker, rc=");
         Serial.println(mqttClient.state());
-        delay(100); // 실패 시 대기 후 재시도
+        return false;
       }
     }
     else
@@ -82,6 +82,7 @@ bool TuyaMQTTClient::connect()
       return true; // 이미 연결됨
     }
   }
+  return false;
 }
 
 void TuyaMQTTClient::loop()
@@ -152,7 +153,9 @@ void TuyaMQTTClient::mqttCallback(char *topic, byte *payload, unsigned int lengt
 {
   StaticJsonDocument<4096> doc;
   DeserializationError error = deserializeJson(doc, payload, length);
-
+  String jsonString;
+  serializeJson(doc, jsonString);
+  Serial.println(jsonString);
   if (!error && doc["data"].containsKey("topic"))
   {
     auto a = doc["data"]["topic"].as<String>();

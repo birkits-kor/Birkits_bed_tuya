@@ -20,6 +20,7 @@ public:
     void do10msTasks();
     void do50msTasks();
     void do100msTasks();
+    void do10sTasks();
     void do1mTasks();
 
 private:
@@ -39,6 +40,7 @@ private:
     unsigned long prev10ms = 0;
     unsigned long prev50ms = 0;
     unsigned long prev100ms = 0;
+    unsigned long prev10s = 0;
     unsigned long prev1m = 0;
 };
 

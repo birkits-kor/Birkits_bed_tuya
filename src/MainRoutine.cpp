@@ -6,19 +6,41 @@ volatile bool tuyaMQTTClient_result = false;
 
 void blinkTask(void *parameter)
 {
-    int val = 100;
+    uint64_t c = 0;
+    bool state = false;
     while (true)
     {
-        if(wifiManager_result)
-            val = 200;
-        if(tuyaMQTTClient_result)
-            val = 50; 
-        analogWrite(LED_BUILTIN, val);
-        vTaskDelay(50000 / val / portTICK_PERIOD_MS); // 500ms 대기
-        analogWrite(LED_BUILTIN, 0);
-        vTaskDelay(50000 / val / portTICK_PERIOD_MS);
+        if (tuyaMQTTClient_result)
+            analogWrite(LED_BUILTIN, 50);
+        else if (wifiManager_result)
+        {
+            if (state)
+            {
+                state = false;
+                analogWrite(LED_BUILTIN, 0);
+            }
+            else
+            {
+                state = true;
+                analogWrite(LED_BUILTIN, 50);
+            }
+        }
+        else if (c % 10 == 0)
+        {
+            if (state)
+            {
+                state = false;
+                analogWrite(LED_BUILTIN, 0);
+            }
+            else
+            {
+                state = true;
+                analogWrite(LED_BUILTIN, 50);
+            }
+        }
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
+        c++;
     }
-
     // 혹시 루프에서 빠져나오면 태스크 삭제
     vTaskDelete(NULL);
 }
@@ -36,7 +58,7 @@ void MainRoutine::init()
         "LED Blink", // 태스크 이름 (디버깅용)
         1024,        // 스택 크기 (단위: 워드)
         NULL,        // 파라미터
-        10,           // 우선순위 (0~25, 높을수록 우선)
+        10,          // 우선순위 (0~25, 높을수록 우선)
         NULL         // 태스크 핸들 (필요 없으면 NULL)
     );
 
@@ -100,8 +122,17 @@ void MainRoutine::do100msTasks()
     {
         prev100ms = now;
         restartRoutine.checkRoutine();
-        tuyaMQTTClient_result = tuyaMQTTClient.connect();
         controlRoutine.loopByApp();
+    }
+}
+
+void MainRoutine::do10sTasks()
+{
+    unsigned long now = millis();
+    if (now - prev10s >= 10 * 1000)
+    {
+        prev10s = now;
+        tuyaMQTTClient_result = tuyaMQTTClient.connect();
     }
 }
 
