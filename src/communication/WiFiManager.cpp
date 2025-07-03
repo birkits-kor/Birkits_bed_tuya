@@ -2,7 +2,6 @@
 
 bool WiFiManager::connect()
 {
-    delay(1000);
     auto wifi_ssid = NVSStorage::getInstance().getCredential("wifi_ssid");
     auto wifi_password = NVSStorage::getInstance().getCredential("wifi_password");
 
@@ -14,8 +13,13 @@ bool WiFiManager::connect()
     int attempts = 0;
     while (WiFi.status() != WL_CONNECTED && attempts < 20)
     {
-        delay(500);
+        delay(50);
         attempts++;
     }
     return WiFi.status() == WL_CONNECTED;
+}
+
+bool WiFiManager::getState()
+{
+    return WiFi.isConnected();
 }

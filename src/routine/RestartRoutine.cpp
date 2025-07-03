@@ -26,9 +26,9 @@ void RestartRoutine::checkRoutine()
                 for(int i=0; i<10; i++)
                 {
                     digitalWrite(LED_BUILTIN, LOW);
-                    delay(100);
+                    delay(200);
                     digitalWrite(LED_BUILTIN, HIGH);
-                    delay(100);
+                    delay(200);
                 }
                 NVSStorage::getInstance().reset(); // Erase EEPROM
                 delay(100);             // Ensure EEPROM is flushed

@@ -8,6 +8,7 @@ void blinkTask(void *parameter)
 {
     uint64_t c = 0;
     bool state = false;
+    analogWrite(LED_BUILTIN, 0);
     while (true)
     {
         if (tuyaMQTTClient_result)
@@ -25,21 +26,7 @@ void blinkTask(void *parameter)
                 analogWrite(LED_BUILTIN, 50);
             }
         }
-        else if (c % 10 == 0)
-        {
-            if (state)
-            {
-                state = false;
-                analogWrite(LED_BUILTIN, 0);
-            }
-            else
-            {
-                state = true;
-                analogWrite(LED_BUILTIN, 50);
-            }
-        }
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
-        c++;
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
     // 혹시 루프에서 빠져나오면 태스크 삭제
     vTaskDelete(NULL);
@@ -144,5 +131,19 @@ void MainRoutine::do1mTasks()
         prev1m = now;
         controlRoutine.loopAlram();
         controlRoutine.loopSnooze();
+        wifiManager_result = wifiManager.getState();
+        // if(!wifiManager_result)
+        //     if (wifiManager.connect())
+        //     {
+        //         wifiManager_result = true;
+        //         Serial.println("WIFI connected!!");
+        //         TimeManager::getInstance().sync();
+        //         tuyaMQTTClient.begin(espClient, mqtt_broker, mqtt_port);
+        //         tuyaMQTTClient_result = tuyaMQTTClient.connect();
+        //     }
+        //     else
+        //     {
+        //         Serial.println("WIFI connect fail!!");
+        //     }
     }
 }

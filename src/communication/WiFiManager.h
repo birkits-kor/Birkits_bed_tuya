@@ -7,6 +7,7 @@
 class WiFiManager {
 public:
     bool connect();
+    bool getState();
 };
 
 #endif // WIFI_MANAGER_H
